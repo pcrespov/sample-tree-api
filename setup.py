@@ -19,7 +19,7 @@ def read_reqs( reqs_path: Path):
 
 readme = (here/'README.md').read_text()
 install_requirements = read_reqs(here/"requirements/_base.txt")
-test_requirements = read_reqs(here/"requirements/_tests.txt")
+test_requirements = read_reqs(here/"requirements/_test.txt")
 
 
 setup(
