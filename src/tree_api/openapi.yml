@@ -1,0 +1,185 @@
+openapi: 3.0.2
+info:
+  title: "tree API"
+  version: "1.0.0"
+  description: "OpenAPI specifications for a service that exposes a tree"
+paths:
+  /:
+    parameters:
+      - $ref: '#/components/parameters/treeQuery'
+      - $ref: '#/components/parameters/treeHeader'
+
+    get:
+      operationId: getTree
+      description: "Retrieves information about the requested tree"
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Tree'
+                  - $ref: '#/components/schemas/TimeStamps'
+                  - $ref: '#/components/schemas/RelatedResources'
+              example:
+                root: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
+                created: "2019-10-04T08:36:01Z"
+                lastModified: "2019-10-04T08:36:01Z"
+                hrefs:
+                  - rel: self
+                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/?host=tall.public.hdfgroup.org
+                  - rel: nodes
+                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes?host=tall.public.hdfgroup.org
+                  - rel: root
+                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71?host=tall.public.hdfgroup.org
+
+        '400':
+          description: "The request was not structured correctly (e.g. a required key was missing)."
+   
+  /nodes:
+    get:
+      operationId: getNodes
+      description: "Returns UUIDs for all the nodes in a tree (other than the root group)."
+      parameters:
+        - $ref: '#/components/parameters/treeQuery'
+        - $ref: '#/components/parameters/treeHeader'
+        - in: query
+          name: limit
+          description: "If provided, a positive integer value specifying the maximum number of UUID’s to return"
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: marker
+          description: "If provided, a string value indicating that only UUID’s that occur after the marker value will be returned."
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    description: "Flat list of nodes in tree"
+                    properties:
+                      nodes:
+                        type: array
+                        items: 
+                          type: string
+                          format: uuid
+                  - $ref: '#/components/schemas/RelatedResources'
+
+  /nodes/{node_id}:
+    parameters:
+      - $ref: '#/components/parameters/nodeId'
+      - $ref: '#/components/parameters/treeQuery'
+      - $ref: '#/components/parameters/treeHeader'
+
+    get:
+      operationId: getNode
+      description: "Returns information about the node with the UUID given in the URI"
+      parameters:
+        - in: query
+          name: include_children
+          description: "If this request parameter is provided, the children of the node are included in the response."
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Node'
+                  - $ref: '#/components/schemas/TimeStamps'
+                  - $ref: '#/components/schemas/RelatedResources'
+   
+ 
+components:
+  schemas:
+
+    Tree:
+      type: object
+      properties:
+        root:
+          type: string
+          description: "The UUID of the root node of this tree"
+    
+    Node:
+      type: object
+      properties:
+        id:
+          description: "UUID of requested node"
+          type: string
+          format: uuid
+        name:
+          description: "User name of the node"
+          type: string
+
+    TimeStamps:
+      type: object
+      properties:
+        created:
+          description: "A timestamp giving the time the node was created in UTC (ISO-8601 format)."
+          type: string
+        lastModified:
+          description: "A timestamp giving the most recent time the node has been modified (i.e. attributes or links updated) in UTC (ISO-8601 format)."
+          type: string
+
+    RelatedResources:
+      type: object
+      properties:
+        hrefs:
+          description: "List to related resources"
+          type: array
+          items:
+            type: object
+            properties:
+              rel:
+                description: type of relation
+                type: string
+                enum: [children, parent, root, self]
+              href:
+                description: "url link to API"
+                type: string
+
+  parameters:
+  
+    treeHeader:
+      in: query
+      description: "specifies tree if has DNS server"
+      name: host
+      schema:
+        type: string
+        #TODO: format tall.public.data.hdfnode.org
+    
+    treeQuery:
+      in: query
+      description: "specifies tree if DNS server is not setup"
+      name: host
+      schema:
+        type: string
+        #TODO: format ?host=tall.public.data.hdfnode.org
+    
+    nodeId:
+      in: path
+      name: node_id
+      description: "UUID of the node"
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+# https://data.hdfnode.org:7258/?host=tall.test.data.hdfgroup.org
+# https://h5serv.readthedocs.io/en/latest/CommonErrorResponses.html
+
+# Added by API Auto Mocking Plugin
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0
