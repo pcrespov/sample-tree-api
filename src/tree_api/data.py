@@ -1,5 +1,5 @@
-#from attr
-
+import attr
+from treelib import Tree, Node
 # view from img/treeview.png
 
 # This is : small.sample.itis.swiss
@@ -10,8 +10,9 @@
 #       ├── Cylinder 1  e7c5e7f0-a1e3-4d2a-b958-494c33923fa0
 #       └── Sphere 1    d3e0da1c-e7a4-4adb-960c-00b477cb1df5
 
-#@attr.s(auto_attribs=True)
-#class Attributes:
+@attr.s(auto_attribs=True)
+class Attributes:
+    pass
 #    created : 
 #    last_modified : 
 #
@@ -29,3 +30,6 @@ tree.create_node("Cylinder 1", parent=group1.identifier, data=Attributes())
 
 
 
+__all__ = [
+    'Node'
+]

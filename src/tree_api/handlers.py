@@ -1,7 +1,13 @@
-from aiohtpp import web
-from .data import tree, root
+from aiohttp import web
+from .data import tree, root, Node
+from yarl import URL
 
 routes = web.RouteTableDef()
+
+def _get_node_url(identifier: str, request: web.Request) -> str:
+    base = request.url.origin()
+    url = URL.join(base, request.app.router['get_node'].url_for(node_id=identifier))
+    return str(url)
 
 
 @routes.get("/", name='get_tree')
@@ -20,11 +26,11 @@ async def get_tree(request: web.Request):
     # }
     # data.update(timestamps)
 
-    # related_resources = [
-    #     {'rel': 'self', 'href': request.url },
-    #     {'rel': 'root', 'href': request.app.router['get_node'].url_for(root_id)},
-    # ]
-    # data['hrefs'] = related_resources
+    related_resources = [
+         {'rel': 'self', 'href': str(request.url) },
+         {'rel': 'root', 'href': _get_node_url(root_id, request)}
+    ]
+    data['hrefs'] = related_resources
 
     return web.json_response(data)
 
@@ -36,7 +42,7 @@ async def get_nodes(request: web.Request):
     include = marker is None
     
     data = []
-    for i, node in tree.all_nodes_iter():
+    for node in tree.all_nodes_itr():
         if node.identifier == marker:
             include = True
         if include:
@@ -47,20 +53,25 @@ async def get_nodes(request: web.Request):
     return web.json_response(data)
 
 
-@routes.get("/node/{node_id}", name='get_node')
+@routes.get("/nodes/{node_id}", name='get_node')
 async def get_node(request: web.Request):
-
     node_id = request.match_info['node_id']
     node = tree[node_id]
+
+    parent = tree.parent(node_id)
     children = tree.children(node_id)
 
+    # Data    
     def _node_to_json(n):
         return {
             'id': n.identifier,
             'name': n.tag,
-        }
+            'href': _get_node_url(n.identifier, request)
+        } if n else None
 
     data = _node_to_json(node)
-    data['children'] = [ _node_to_json(child)  for child in children]
-    
-    return data
+    data['children'] = [ _node_to_json(child)  
+        for child in children]
+    data['parent'] = _node_to_json(parent)
+
+    return web.json_response(data)
