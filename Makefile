@@ -17,10 +17,10 @@ devel: .venv ## builds development environment
 .PHONY: clean
 clean: .check-clean ## cleans unversioned and ignored files
 	# remove unversioned
-	-@git clean -dfX
+	-@git clean -dfx
 
 .check-clean:
-	@git clean -ndfX
+	@git clean -ndfx
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
 
@@ -28,6 +28,4 @@ clean: .check-clean ## cleans unversioned and ignored files
 help: # this colorful help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-
-demo:
 

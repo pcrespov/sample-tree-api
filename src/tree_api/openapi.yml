@@ -2,15 +2,14 @@ openapi: 3.0.2
 info:
   title: "tree API"
   version: "1.0.0"
-  description: "OpenAPI specifications for a service that exposes a tree"
+  description: "OpenAPI specifications for a simple API that exposes a tree data-structure"
 paths:
   /:
     parameters:
       - $ref: '#/components/parameters/treeQuery'
-      - $ref: '#/components/parameters/treeHeader'
 
     get:
-      operationId: getTree
+      operationId: get_tree
       description: "Retrieves information about the requested tree"
       responses:
         '200':
@@ -20,30 +19,18 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/Tree'
-                  - $ref: '#/components/schemas/TimeStamps'
-                  - $ref: '#/components/schemas/RelatedResources'
               example:
                 root: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
-                created: "2019-10-04T08:36:01Z"
-                lastModified: "2019-10-04T08:36:01Z"
-                hrefs:
-                  - rel: self
-                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/?host=tall.public.hdfgroup.org
-                  - rel: nodes
-                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes?host=tall.public.hdfgroup.org
-                  - rel: root
-                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71?host=tall.public.hdfgroup.org
 
         '400':
           description: "The request was not structured correctly (e.g. a required key was missing)."
    
   /nodes:
     get:
-      operationId: getNodes
+      operationId: get_nodes
       description: "Returns UUIDs for all the nodes in a tree (other than the root group)."
       parameters:
         - $ref: '#/components/parameters/treeQuery'
-        - $ref: '#/components/parameters/treeHeader'
         - in: query
           name: limit
           description: "If provided, a positive integer value specifying the maximum number of UUID’s to return"
@@ -71,24 +58,22 @@ paths:
                         items: 
                           type: string
                           format: uuid
-                  - $ref: '#/components/schemas/RelatedResources'
+              example:
+                nodes:
+                  - "d29dced4-4399-4bdc-951d-d474a48db477"
+                  - "5e92f325-2085-45ab-9c21-8a9019a2290d"
+                  - "17895910-9d97-45d0-aeeb-0faaff44080e"
+                  - "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
+                  - "d3e0da1c-e7a4-4adb-960c-00b477cb1df5"
 
   /nodes/{node_id}:
     parameters:
       - $ref: '#/components/parameters/nodeId'
       - $ref: '#/components/parameters/treeQuery'
-      - $ref: '#/components/parameters/treeHeader'
 
     get:
-      operationId: getNode
+      operationId: get_node
       description: "Returns information about the node with the UUID given in the URI"
-      parameters:
-        - in: query
-          name: include_children
-          description: "If this request parameter is provided, the children of the node are included in the response."
-          schema:
-            type: boolean
-            default: true
       responses:
         '200':
           description: ok
@@ -97,10 +82,31 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/Node'
-                  - $ref: '#/components/schemas/TimeStamps'
-                  - $ref: '#/components/schemas/RelatedResources'
-   
+                  - type: object
+                    properties:
+                      children:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Node'
+              examples:
+                Group1Node:
+                  summary: "Example of a non-leaf"
+                  value:
+                    id: "17895910-9d97-45d0-aeeb-0faaff44080e"
+                    name: "Group 1"
+                    children:
+                      - id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
+                        name: "Cylinder 1"
+                      - id: "d3e0da1c-e7a4-4adb-960c-00b477cb1df5"
+                        name: "Sphere 1"
+                CylinderLeaf:
+                  summary: "Example of cylinder leaf"
+                  value:
+                    id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
+                    name: "Cylinder 1"
+                    children: []
  
+
 components:
   schemas:
 
@@ -110,7 +116,7 @@ components:
         root:
           type: string
           description: "The UUID of the root node of this tree"
-    
+
     Node:
       type: object
       properties:
@@ -122,43 +128,9 @@ components:
           description: "User name of the node"
           type: string
 
-    TimeStamps:
-      type: object
-      properties:
-        created:
-          description: "A timestamp giving the time the node was created in UTC (ISO-8601 format)."
-          type: string
-        lastModified:
-          description: "A timestamp giving the most recent time the node has been modified (i.e. attributes or links updated) in UTC (ISO-8601 format)."
-          type: string
-
-    RelatedResources:
-      type: object
-      properties:
-        hrefs:
-          description: "List to related resources"
-          type: array
-          items:
-            type: object
-            properties:
-              rel:
-                description: type of relation
-                type: string
-                enum: [children, parent, root, self]
-              href:
-                description: "url link to API"
-                type: string
 
   parameters:
-  
-    treeHeader:
-      in: query
-      description: "specifies tree if has DNS server"
-      name: host
-      schema:
-        type: string
-        #TODO: format tall.public.data.hdfnode.org
-    
+      
     treeQuery:
       in: query
       description: "specifies tree if DNS server is not setup"

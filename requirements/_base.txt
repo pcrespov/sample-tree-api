@@ -1,1 +1,4 @@
+aiohttp
+aiohttp-swagger   # Swagger API Documentation builder for aiohttp server.
+
 treelib
