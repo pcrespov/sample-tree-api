@@ -3,9 +3,9 @@ from aiohttp_swagger import setup_swagger
 
 from .handlers import routes
 
-from aiohttp_swagger import setup_swagger
 
 def main():
+    import pdb; pdb.set_trace()
     app = web.Application()
     app.add_routes(routes)
 

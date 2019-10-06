@@ -41,7 +41,7 @@ async def get_nodes(request: web.Request):
             include = True
         if include:
             data.append(node.identifier)
-            if len(data) > limit
+            if len(data) > limit:
                 break
 
     return web.json_response(data)

@@ -6,8 +6,8 @@
 	@.venv/bin/pip --no-cache install -U pip setuptools wheel
 
 
-.PHONY: devel
-devel: .venv ## builds development environment
+.PHONY: devenv
+devenv: .venv ## builds development environment
 	# installing dependencies
 	@.venv/bin/pip install -r requirements/_test.txt
 	# installing in edit mode

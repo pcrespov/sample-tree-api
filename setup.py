@@ -42,7 +42,7 @@ setup(
     },
     package_data={
         '': [
-            'config/*.yaml',
+            '*.yml',
             ],
     },
     include_package_data=True,
@@ -54,7 +54,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "simcore-service-tree = simcore_service_tree.cli:main",
+            "simcore-service-api = tree_api.app:main",
         ],
     },
 )
