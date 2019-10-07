@@ -20,6 +20,7 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Tree'
               example:
+                name: "Modeling Tree"
                 root: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
 
         '400':
@@ -86,8 +87,11 @@ paths:
                     properties:
                       children:
                         type: array
+                        nullable: true
                         items:
                           $ref: '#/components/schemas/Node'
+                      parent:
+                        $ref: '#/components/schemas/Node'
               examples:
                 Group1Node:
                   summary: "Example of a non-leaf"
@@ -97,28 +101,42 @@ paths:
                     children:
                       - id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                         name: "Cylinder 1"
+                        href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0
                       - id: "d3e0da1c-e7a4-4adb-960c-00b477cb1df5"
                         name: "Sphere 1"
+                        href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/d3e0da1c-e7a4-4adb-960c-00b477cb1df5
+                    parent: 
+                      id: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
+                      name: "Model"
+                      href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71
                 CylinderLeaf:
                   summary: "Example of cylinder leaf"
                   value:
                     id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                     name: "Cylinder 1"
-                    children: []
+                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0
+                    children: null
+                    parent: 
+                      id: "17895910-9d97-45d0-aeeb-0faaff44080e"
+                      name: "Group1"
+                      href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/17895910-9d97-45d0-aeeb-0faaff44080e
  
-
 components:
   schemas:
 
     Tree:
       type: object
       properties:
+        name:
+          type: string
+          description: "Name of the tree (defaults to root's name)"
         root:
           type: string
           description: "The UUID of the root node of this tree"
 
     Node:
       type: object
+      nullable: true
       properties:
         id:
           description: "UUID of requested node"
@@ -127,7 +145,32 @@ components:
         name:
           description: "User name of the node"
           type: string
+        childrenCount:
+          description: "Number of children"
+          type: integer
+          minimum: 0
+        href:
+          description: "link to node resource"
+          type: string
 
+
+    RelatedResources:
+      type: object
+      properties:
+        hrefs:
+          description: "List to related resources"
+          # https://h5serv.readthedocs.io/en/latest/Hypermedia.html
+          type: array
+          items:
+            type: object
+            properties:
+              rel:
+                description: type of relation
+                type: string
+                enum: [attributes ,data ,database ,groupbase ,home ,owner ,root ,self, typebase]
+              href:
+                description: link
+                type: string
 
   parameters:
       
@@ -148,8 +191,6 @@ components:
         type: string
         format: uuid
 
-# https://data.hdfnode.org:7258/?host=tall.test.data.hdfgroup.org
-# https://h5serv.readthedocs.io/en/latest/CommonErrorResponses.html
 
 # Added by API Auto Mocking Plugin
 servers:

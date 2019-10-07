@@ -7,11 +7,15 @@
 
 
 .PHONY: devenv
-devenv: .venv ## builds development environment
+devenv: src/simcore_service_tree.egg-info
+src/simcore_service_tree.egg-info: .venv  ## builds development environment
 	# installing dependencies
 	@.venv/bin/pip install -r requirements/_test.txt
 	# installing in edit mode
 	@.venv/bin/pip install -e .
+
+up-devel: devenv
+	simcore-service-api --port=8081
 
 
 .PHONY: clean

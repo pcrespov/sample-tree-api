@@ -1,5 +1,5 @@
 from aiohttp import web
-from .data import tree, root, Node
+from .data import DATA_NAMESPACE, Node
 from yarl import URL
 
 routes = web.RouteTableDef()
@@ -12,12 +12,11 @@ def _get_node_url(identifier: str, request: web.Request) -> str:
 
 @routes.get("/", name='get_tree')
 async def get_tree(request: web.Request):
-    
-    root_id = root.identifier
-
+    tree = request.app[f"{DATA_NAMESPACE}.tree"]    
     # Building data
     data = {
-        'root': root_id
+        'name': tree.name,
+        'root': tree.root
     }
 
     # timestamps = {
@@ -28,7 +27,7 @@ async def get_tree(request: web.Request):
 
     related_resources = [
          {'rel': 'self', 'href': str(request.url) },
-         {'rel': 'root', 'href': _get_node_url(root_id, request)}
+         {'rel': 'root', 'href': _get_node_url(tree.root, request)}
     ]
     data['hrefs'] = related_resources
 
@@ -36,7 +35,9 @@ async def get_tree(request: web.Request):
 
 @routes.get("/nodes", name='get_nodes')
 async def get_nodes(request: web.Request):
-    limit = request.query.get('limit', tree.size())
+    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+
+    limit = int(request.query.get('limit', tree.size()))
     marker = request.query.get('marker')
 
     include = marker is None
@@ -55,23 +56,25 @@ async def get_nodes(request: web.Request):
 
 @routes.get("/nodes/{node_id}", name='get_node')
 async def get_node(request: web.Request):
+    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+
     node_id = request.match_info['node_id']
     node = tree[node_id]
 
     parent = tree.parent(node_id)
-    children = tree.children(node_id)
+    children = tree.children(node_id) or []
 
     # Data    
-    def _node_to_json(n):
+    def _to_json(anode):
         return {
-            'id': n.identifier,
-            'name': n.tag,
-            'href': _get_node_url(n.identifier, request)
-        } if n else None
+            'id': anode.identifier,
+            'name': anode.tag,
+            'childrenCount': len( tree.children(anode.identifier) or [] ),
+            'href': _get_node_url(anode.identifier, request)
+        } if anode else None
 
-    data = _node_to_json(node)
-    data['children'] = [ _node_to_json(child)  
-        for child in children]
-    data['parent'] = _node_to_json(parent)
+    data = _to_json(node)
+    data['children'] = [ _to_json(child) for child in children] or None
+    data['parent'] = _to_json(parent)
 
     return web.json_response(data)

@@ -7,7 +7,7 @@ import uuid as uuidlib
 
 
 @pytest.fixture
-def sample_model_tree():
+def atree():
     # view from img/treeview.png
     tree = Tree()
     tree.create_node("Model", 0) # Root
@@ -19,28 +19,19 @@ def sample_model_tree():
     return tree
 
 
-def test_get_domain(sample_model_tree):
-    
-    tree = sample_model_tree
+import pickle
 
+from tree_api.data import create_large_tree
+
+
+def test_caching():
+
+    tree = create_large_tree(max_depth=2, max_children=2)
+    tree2 = create_large_tree(max_depth=2, max_children=2)
+    
     import pdb; pdb.set_trace()
-
     tree.show()
-    
-    print(json.dumps(tree.to_json(), indent=2))
 
-
-    # get root
-    root = tree.nodes[0]
-    assert root.identifier == tree.root
-    
-
-    # get 
-    
-
-
-
-    
-
+    tree2.show()
 
 
