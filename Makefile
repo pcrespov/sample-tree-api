@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 
 .venv:
-	# creating virtual environ
+	# creating virtual environment
 	@python3 -m venv .venv
 	@.venv/bin/pip --no-cache install -U pip setuptools wheel
 

@@ -1,8 +1,11 @@
+from typing import Dict
+
 import yaml
 from aiohttp import web
 from yarl import URL
 
-from .data import DATA_NAMESPACE, Node
+from .data import DATA_NAMESPACE, Node, Tree
+
 
 routes = web.RouteTableDef()
 
@@ -11,7 +14,6 @@ def _get_node_url(identifier: str, request: web.Request) -> str:
     base = request.url.origin()
     url = URL.join(base, request.app.router['get_node'].url_for(node_id=identifier))
     return str(url)
-
 
 def _get_tree(request: web.Request):
     # FIXME: check header!!!
@@ -23,8 +25,29 @@ def _get_tree(request: web.Request):
     tree = request.app[f"{DATA_NAMESPACE}.tree"]
     return tree
 
+def _get_node_meta(node: Node, tree: Tree, request: web.Request, *, \
+        include_count=True, 
+        include_attrs=False, 
+        include_depth=True) -> Dict:
+    data = {
+        'id': node.identifier,
+        'tag': node.tag
+    }
+    if include_count:
+        data['childrenCount'] = len( tree.children(node.identifier) or [] )
 
-def _get_node_attributes(node):
+    if include_depth:
+        data['depth'] = tree.depth(node)
+
+    if include_attrs:
+        data.update(_get_node_attributes(node))
+
+    if request is not None:
+        data['href'] = _get_node_url(node.identifier, request)
+    return data
+
+def _get_node_attributes(node: Node) -> Dict:
+    # TODO: move to node.data! payload
     data = {
         'expanded': node.expanded,
         'checked': getattr(node, 'checked', False),
@@ -32,19 +55,62 @@ def _get_node_attributes(node):
     }
     return data
 
+def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None):
+    base = request.url.origin()
 
-def _create_basic_hrefs(request: web.Request):
-    tree = request.app[f"{DATA_NAMESPACE}.tree"]
-    hrefs = [
-        {'rel': 'self', 'href': str(request.url) },
-        {'rel': 'root', 'href': _get_node_url(tree.root, request)}
+    hrefs = [{
+        'rel': 'self', 
+        'href': str(request.url) 
+        }, 
     ]
+    
+    if root:
+        hrefs.append({
+            'rel': 'root', 
+            'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=root)))
+        })
+
+    if owner:
+        hrefs.append({
+            'rel': 'owner', 
+            'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=owner)))
+        })
+
+    if parent:
+        hrefs.append({
+            'rel': 'parent', 
+            'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=parent)))
+        })
+    
+    if data:
+        hrefs.append({
+            'rel': 'data', 
+            'href': str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=data)))
+        })
+
+    if attributes:
+        hrefs.append({
+            'rel': 'attributes', 
+            'href': str(URL.join(base, request.app.router['get_node_attributes'].url_for(node_id=attributes)))
+        })
     return hrefs
 
+def _get_collection_page(nodes_iterable, marker, limit):
+    nodes = []
+    include = marker is None
+    for node in nodes_iterable:
+        if node.identifier == marker:
+            include = True
+        if include:
+            nodes.append(node)
+            if len(nodes) >= limit:
+                break
+    return nodes
 
 
 # TODO: schemas? marshmallow? Attrs?
-
+# TODO: add filtering, scoping?
+# TODO: 
 
 # Handlers ------------
 
@@ -52,19 +118,11 @@ def _create_basic_hrefs(request: web.Request):
 async def get_tree(request: web.Request):
     tree = _get_tree(request)
 
-    # Building data
     data = {
         'name': tree.name,
         'root': tree.root,
+        'hrefs': _create_hrefs(request, root=tree.root)
     }
-
-    # timestamps = {
-    #     'created':
-    #     'lastModified':
-    # }
-    # data.update(timestamps)
-
-    data['hrefs'] = _create_basic_hrefs(request)
 
     return web.json_response(data)
 
@@ -72,23 +130,14 @@ async def get_tree(request: web.Request):
 async def get_nodes(request: web.Request):
     tree = _get_tree(request)
 
+    # filter
     limit = int(request.query.get('limit', tree.size()))
     marker = request.query.get('marker')
-
-    include = marker is None
-    
-    nodes = []
-    for node in tree.all_nodes_itr():
-        if node.identifier == marker:
-            include = True
-        if include:
-            nodes.append(node.identifier)
-            if len(nodes) >= limit:
-                break
+    nodes = _get_collection_page(tree.all_nodes_itr(), marker, limit)
 
     data = {
-        'nodes': nodes,
-        'hrefs': _create_basic_hrefs(request)
+        'nodes': [ _get_node_meta(n, tree, None, include_count=False) for n in nodes],
+        'hrefs': _create_hrefs(request, root=tree.root)
     }
     return web.json_response(data)
 
@@ -97,60 +146,28 @@ async def get_node(request: web.Request):
     tree = _get_tree(request)
 
     node_id = request.match_info['node_id']
-    
+
     node = tree[node_id]
+    data = _get_node_meta(node, tree, None, include_attrs=True)
+
+    # filter
+    limit = int(request.query.get('limit', tree.size()))
+    marker = request.query.get('marker')
+    children = _get_collection_page(tree.children(node_id) or [], marker, limit)
+
+    data['children'] = [ _get_node_meta(child, tree, request, include_attrs=True, include_depth=False)
+        for child in children
+    ] or None
+
     parent = tree.parent(node_id)
-    children = tree.children(node_id) or [] # TODO: optimize since only need number of children!
-
-    data = {
-        'id': node.identifier,
-        'name': node.tag,
-        'childrenCount': len(children),
-        'depth': tree.depth(node),
-        'href': _get_node_url(node.identifier, request)
-    }
-
-    data['hrefs'] = _create_basic_hrefs(request).pop()
-    base = request.url.origin()
-    
-    data['hrefs'].append({'ref': 'parent', 'href': _get_node_url(parent.identifier, request) if parent else None})
-
-    children_url = str(URL.join(base, request.app.router['get_node_children'].url_for(node_id=node.identifier)))
-    data['hrefs'].append({'ref': 'children', 'href': children_url})
-    
-    data_url = str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=node.identifier)))
-    data['hrefs'].append({'ref': 'data', 'href': data_url})
-
-    data_url = str(URL.join(base, request.app.router['get_node_attributes'].url_for(node_id=node.identifier)))
-    data['hrefs'].append({'ref': 'attributes', 'href': data_url})
+    data['hrefs'] = _create_hrefs(request,
+        root=tree.root, 
+        parent=parent.identifier if parent else None, 
+        data=node_id, 
+        attributes=node_id)
 
     return web.json_response(data)
 
-
-@routes.get("/nodes/{node_id}/children", name='get_node_children')
-async def get_node_children(request: web.Request):
-    tree = _get_tree(request)
-
-    node_id = request.match_info['node_id']
-    node = tree[node_id]
-    parent = tree.parent(node_id)
-    children = tree.children(node_id) or []
-
-    # Response
-    def _to_json(anode):
-        return {
-            'id': anode.identifier,
-            #'name': anode.tag,
-            #'childrenCount': len( tree.children(anode.identifier) or [] ),
-            #'depth': tree.depth(anode),
-            'href': _get_node_url(anode.identifier, request)
-        }
-
-    data = {
-        'children': [ _to_json(child) for child in children] or None
-    }
-
-    return web.json_response(data)
 
 @routes.get("/nodes/{node_id}/attributes", name='get_node_attributes')
 async def get_node_attributes(request: web.Request):
@@ -158,17 +175,23 @@ async def get_node_attributes(request: web.Request):
 
     node_id = request.match_info['node_id']
     node = tree[node_id]
-    attrs = _get_node_attributes(node)
+    data = _get_node_attributes(node)
+
+    data['hrefs'] = _create_hrefs(request,
+        owner=node_id)
+
     return web.json_response(data)
 
 
 @routes.get("/nodes/{node_id}/data", name='get_node_data')
-async def get_node_data(request: web.Request):
-    
+async def get_node_data(request: web.Request):    
     tree = _get_tree(request)
     node_id = request.match_info['node_id']
     
-    schema = yaml.safe_load("""
+    data ={}
+
+    #TODO:  move to data.py
+    data['schema'] = yaml.safe_load("""
     type: object
     properties:
         foo: 
@@ -189,7 +212,7 @@ async def get_node_data(request: web.Request):
     """)
     
 
-    data = {
+    data['data'] = {
         'foo': 3,
         'bar': 3.14,
         'wo': 'a',
@@ -199,4 +222,7 @@ async def get_node_data(request: web.Request):
         }
     }
 
-    return web.json_response({'data':data, 'schema':schema})
+    data['hrefs'] = _create_hrefs(request,
+        owner=node_id)
+
+    return web.json_response(data)

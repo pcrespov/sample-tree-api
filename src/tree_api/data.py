@@ -1,5 +1,6 @@
 import functools
 import logging
+import os
 import pickle
 import random
 from pathlib import Path
@@ -25,6 +26,7 @@ class Attributes:
     # 2019-10-04T08:36:01Z
 
 
+
 def cache_data(creator_fun):
     @functools.wraps(creator_fun)
     def decorator(**kargs):
@@ -34,6 +36,7 @@ def cache_data(creator_fun):
                 data = pickle.load(fh)
         else:
             data = creator_fun(**kargs)
+            os.makedirs(path.parent, exist_ok=True)
             with path.open('wb') as fh:
                 pickle.dump(data, fh)
         return data
