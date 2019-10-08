@@ -1,0 +1,120 @@
+# TODO: template with jinja
+openapi: 3.0.0
+info:
+  title: "Sample with CRUD operations"
+  version: "1.0.0-oas3"
+paths:
+  /projects:
+    get:
+      summary: List Project
+      operationId: findProjects
+      responses:
+        '200':
+          description: ''
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/project-output'
+    post:
+      summary: Create Project
+      operationId: createProject
+      responses:
+        '201':
+          description: ''
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/project-output-detailed'
+      requestBody:
+        $ref: '#/components/requestBodies/project-input'
+  '/projects/{projectId}':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get Project
+      operationId: getProject
+      responses:
+        '200':
+          description: ''
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/project-output-detailed'
+    put:
+      summary: Update Project
+      operationId: updateProject
+      responses:
+        '200':
+          description: ''
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/project-output-detailed'
+      requestBody:
+        $ref: '#/components/requestBodies/project-input'
+    delete:
+      summary: Delete Project
+      operationId: deleteProject
+      responses:
+        '204':
+          description: ''
+servers:
+  - url: 'https://virtserver.swaggerhub.com/pcrespov/sample-CRUD/1.0.0'
+components:
+  requestBodies:
+    project-input:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/project-input'
+  schemas:
+    project-common:
+      title: Project Common
+      description: >-
+        The properties that are shared amongst all versions of the Project
+        model.
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    project-input:
+      title: Project Input
+      description: The properties that are allowed when creating or updating a Project.
+      allOf:
+        - $ref: '#/components/schemas/project-common'
+        - type: object
+          properties: {}
+    project-output:
+      title: Project Output
+      description: The properties that are included when fetching a list of Projects.
+      allOf:
+        - type: object
+          properties:
+            thumbnail:
+              type: string
+              format: uri
+            createdOn:
+              type: string
+              format: date-time
+            createdBy:
+              type: string
+              format: uuid
+            projectId:
+              type: string
+              format: uuid
+        - $ref: '#/components/schemas/project-common'
+    project-output-detailed:
+      title: Project Output Detailed
+      description: The properties that are included when fetching a single Project.
+      allOf:
+        - $ref: '#/components/schemas/project-output'
+        - type: object
+          properties: {}
