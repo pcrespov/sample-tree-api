@@ -63,3 +63,4 @@ docs/_build
 
 
 .tmp/
+.vscode/settings.json

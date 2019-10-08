@@ -24,6 +24,34 @@ import pickle
 from tree_api.data import create_large_tree
 
 
+import yaml
+
+def test_schemas():
+        
+    schema = yaml.safe_load("""
+    type: object
+    properties:
+        foo: 
+            type: integer
+            description: 'some random integer'
+        bar:
+            type: number
+        wo:
+            type: string
+        info:
+            type: object
+            properties:
+                one:
+                    type: string
+                another:
+                    type: string
+                    description: 'something different from one'
+    """)
+    assert schema
+    import pdb; pdb.set_trace()
+    print(schema    )
+
+
 def test_caching():
 
     tree = create_large_tree(max_depth=2, max_children=2)

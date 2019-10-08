@@ -1,6 +1,8 @@
+import yaml
 from aiohttp import web
-from .data import DATA_NAMESPACE, Node
 from yarl import URL
+
+from .data import DATA_NAMESPACE, Node
 
 routes = web.RouteTableDef()
 
@@ -165,38 +167,27 @@ async def get_node_data(request: web.Request):
     
     tree = _get_tree(request)
     node_id = request.match_info['node_id']
-
-    data = {
-        'foo': {
-            'type': 'integer',
-            'value': 3
-        },
-        'bar': {
-            'type': 'number',
-            'value': 3.14
-        },
-        'wo': {
-            'type': 'string',
-            'enum': ['a', 'b', 'c'],
-            'value': 0
-        },
-        'info': {
-            'type': 'object',
-            'value':{
-                'one':{
-                    'type': 'string',
-                    'value': 'foo'
-                },
-                'another':{
-                    'type': 'string',
-                    'value': 'bar',
-                }
-            }
-        }
-    }
-
-    schema = {
-    }
+    
+    schema = yaml.safe_load("""
+    type: object
+    properties:
+        foo: 
+            type: integer
+            description: 'some random integer'
+        bar:
+            type: number
+        wo:
+            type: string
+        info:
+            type: object
+            properties:
+                one:
+                    type: string
+                another:
+                    type: string
+                    description: 'something different from one'
+    """)
+    
 
     data = {
         'foo': 3,
@@ -209,4 +200,3 @@ async def get_node_data(request: web.Request):
     }
 
     return web.json_response({'data':data, 'schema':schema})
-
