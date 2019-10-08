@@ -11,7 +11,7 @@ def _get_node_url(identifier: str, request: web.Request) -> str:
     return str(url)
 
 
-def _load_tree(request: web.Request):
+def _get_tree(request: web.Request):
     # FIXME: check header!!!
     # FIXME: load this specific tree!?
     # FIXME: format?
@@ -20,6 +20,15 @@ def _load_tree(request: web.Request):
     # FIXME: should load tree specified in host!
     tree = request.app[f"{DATA_NAMESPACE}.tree"]
     return tree
+
+
+def _get_node_attributes(node):
+    data = {
+        'expanded': node.expanded,
+        'checked': getattr(node, 'checked', False),
+        'locked': getattr(node, 'locked', False)
+    }
+    return data
 
 
 def _create_basic_hrefs(request: web.Request):
@@ -39,12 +48,12 @@ def _create_basic_hrefs(request: web.Request):
 
 @routes.get("/", name='get_tree')
 async def get_tree(request: web.Request):
-    tree = _load_tree(request)
+    tree = _get_tree(request)
 
     # Building data
     data = {
         'name': tree.name,
-        'root': tree.root
+        'root': tree.root,
     }
 
     # timestamps = {
@@ -59,7 +68,7 @@ async def get_tree(request: web.Request):
 
 @routes.get("/nodes", name='get_nodes')
 async def get_nodes(request: web.Request):
-    tree = _load_tree(request)
+    tree = _get_tree(request)
 
     limit = int(request.query.get('limit', tree.size()))
     marker = request.query.get('marker')
@@ -83,7 +92,7 @@ async def get_nodes(request: web.Request):
 
 @routes.get("/nodes/{node_id}", name='get_node')
 async def get_node(request: web.Request):
-    tree = _load_tree(request)
+    tree = _get_tree(request)
 
     node_id = request.match_info['node_id']
     
@@ -95,9 +104,11 @@ async def get_node(request: web.Request):
         'id': node.identifier,
         'name': node.tag,
         'childrenCount': len(children),
+        'depth': tree.depth(node),
+        'href': _get_node_url(node.identifier, request)
     }
 
-    data['hrefs'] = _create_basic_hrefs(request)
+    data['hrefs'] = _create_basic_hrefs(request).pop()
     base = request.url.origin()
     
     data['hrefs'].append({'ref': 'parent', 'href': _get_node_url(parent.identifier, request) if parent else None})
@@ -108,12 +119,15 @@ async def get_node(request: web.Request):
     data_url = str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=node.identifier)))
     data['hrefs'].append({'ref': 'data', 'href': data_url})
 
+    data_url = str(URL.join(base, request.app.router['get_node_attributes'].url_for(node_id=node.identifier)))
+    data['hrefs'].append({'ref': 'attributes', 'href': data_url})
+
     return web.json_response(data)
 
 
 @routes.get("/nodes/{node_id}/children", name='get_node_children')
 async def get_node_children(request: web.Request):
-    tree = _load_tree(request)
+    tree = _get_tree(request)
 
     node_id = request.match_info['node_id']
     node = tree[node_id]
@@ -124,8 +138,10 @@ async def get_node_children(request: web.Request):
     def _to_json(anode):
         return {
             'id': anode.identifier,
-            'name': anode.tag,
-            'childrenCount': len( tree.children(anode.identifier) or [] ),
+            #'name': anode.tag,
+            #'childrenCount': len( tree.children(anode.identifier) or [] ),
+            #'depth': tree.depth(anode),
+            'href': _get_node_url(anode.identifier, request)
         }
 
     data = {
@@ -134,6 +150,63 @@ async def get_node_children(request: web.Request):
 
     return web.json_response(data)
 
+@routes.get("/nodes/{node_id}/attributes", name='get_node_attributes')
+async def get_node_attributes(request: web.Request):
+    tree = _get_tree(request)
+
+    node_id = request.match_info['node_id']
+    node = tree[node_id]
+    attrs = _get_node_attributes(node)
+    return web.json_response(data)
+
+
 @routes.get("/nodes/{node_id}/data", name='get_node_data')
 async def get_node_data(request: web.Request):
-    pass
+    
+    tree = _get_tree(request)
+    node_id = request.match_info['node_id']
+
+    data = {
+        'foo': {
+            'type': 'integer',
+            'value': 3
+        },
+        'bar': {
+            'type': 'number',
+            'value': 3.14
+        },
+        'wo': {
+            'type': 'string',
+            'enum': ['a', 'b', 'c'],
+            'value': 0
+        },
+        'info': {
+            'type': 'object',
+            'value':{
+                'one':{
+                    'type': 'string',
+                    'value': 'foo'
+                },
+                'another':{
+                    'type': 'string',
+                    'value': 'bar',
+                }
+            }
+        }
+    }
+
+    schema = {
+    }
+
+    data = {
+        'foo': 3,
+        'bar': 3.14,
+        'wo': 'a',
+        'info':{
+            'one': 'foo',
+            'another': 'bar'
+        }
+    }
+
+    return web.json_response({'data':data, 'schema':schema})
+

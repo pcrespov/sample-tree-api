@@ -205,6 +205,10 @@ components:
           type: integer
           minimum: 0
           readOnly: true
+        depth:
+          description: "Gets level of depth of a given node"
+          type: integer
+          minimum: 1
 
     NodeAttributes:
       type: object
@@ -212,14 +216,16 @@ components:
       properties:
         expanded:
           type: boolean
-          default: false
+          description: "If false, all node children are hidden"
+          default: true
         checked:
           type: boolean
           default: false
         locked:
-          description: "This node cannot be modified. Readonly."
+          description: "This node is set as read-only."
           type: boolean
           default: false
+        
 
     NodeData:
       type: object

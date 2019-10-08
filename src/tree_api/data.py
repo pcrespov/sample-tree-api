@@ -49,7 +49,7 @@ def create_large_tree(*,max_depth: int=5, max_children: int=20):
     def create_children(parent, depth):
         if depth+1 <= max_depth:
             N = random.randrange(max_children)
-            names = [ f"{fake.name()} - {n}" for n in range(N)] # n random names # pylint: disable=no-member
+            names = [ f"{fake.name()}" for n in range(N)] # n random names # pylint: disable=no-member
             children = [ tree.create_node(name, parent=parent.identifier) for name in names ]
             for child in children:
                 create_children(child, depth+1)
