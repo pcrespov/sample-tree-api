@@ -10,6 +10,7 @@ def _get_node_url(identifier: str, request: web.Request) -> str:
     url = URL.join(base, request.app.router['get_node'].url_for(node_id=identifier))
     return str(url)
 
+
 def _load_tree(request: web.Request):
     # FIXME: check header!!!
     # FIXME: load this specific tree!?
@@ -28,6 +29,8 @@ def _create_basic_hrefs(request: web.Request):
         {'rel': 'root', 'href': _get_node_url(tree.root, request)}
     ]
     return hrefs
+
+
 
 # TODO: schemas? marshmallow? Attrs?
 
@@ -83,22 +86,54 @@ async def get_node(request: web.Request):
     tree = _load_tree(request)
 
     node_id = request.match_info['node_id']
+    
     node = tree[node_id]
+    parent = tree.parent(node_id)
+    children = tree.children(node_id) or [] # TODO: optimize since only need number of children!
 
+    data = {
+        'id': node.identifier,
+        'name': node.tag,
+        'childrenCount': len(children),
+    }
+
+    data['hrefs'] = _create_basic_hrefs(request)
+    base = request.url.origin()
+    
+    data['hrefs'].append({'ref': 'parent', 'href': _get_node_url(parent.identifier, request) if parent else None})
+
+    children_url = str(URL.join(base, request.app.router['get_node_children'].url_for(node_id=node.identifier)))
+    data['hrefs'].append({'ref': 'children', 'href': children_url})
+    
+    data_url = str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=node.identifier)))
+    data['hrefs'].append({'ref': 'data', 'href': data_url})
+
+    return web.json_response(data)
+
+
+@routes.get("/nodes/{node_id}/children", name='get_node_children')
+async def get_node_children(request: web.Request):
+    tree = _load_tree(request)
+
+    node_id = request.match_info['node_id']
+    node = tree[node_id]
     parent = tree.parent(node_id)
     children = tree.children(node_id) or []
 
-    # Data    
+    # Response
     def _to_json(anode):
         return {
             'id': anode.identifier,
             'name': anode.tag,
             'childrenCount': len( tree.children(anode.identifier) or [] ),
-            'href': _get_node_url(anode.identifier, request)
-        } if anode else None
+        }
 
-    data = _to_json(node)
-    data['children'] = [ _to_json(child) for child in children] or None
-    data['parent'] = _to_json(parent)
+    data = {
+        'children': [ _to_json(child) for child in children] or None
+    }
 
     return web.json_response(data)
+
+@routes.get("/nodes/{node_id}/data", name='get_node_data')
+async def get_node_data(request: web.Request):
+    pass

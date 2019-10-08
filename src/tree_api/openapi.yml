@@ -205,10 +205,6 @@ components:
           type: integer
           minimum: 0
           readOnly: true
-        href:
-          description: "link to node resource"
-          type: string
-          readOnly: true
 
     NodeAttributes:
       type: object
