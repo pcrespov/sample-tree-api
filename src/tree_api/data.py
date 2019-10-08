@@ -13,6 +13,8 @@ from treelib import Node, Tree
 fake = Faker()
 
 DATA_NAMESPACE = __name__
+MAX_CHILDREN = int(os.environ.get("MAX_CHILDREN",30))
+MAX_DEPTH = int(os.environ.get("MAX_DEPTH",4))
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +93,8 @@ def create_sample_tree():
 def setup_data(app: web.Application):
     #tree = create_sample_tree()
     log.debug("building sample tree")
-    tree = create_large_tree(max_depth=4, max_children=30)
+
+    tree = create_large_tree(max_depth=MAX_DEPTH, max_children=MAX_CHILDREN)
     log.debug("saving sample tree")
 
     app[f"{DATA_NAMESPACE}.tree"] = tree
