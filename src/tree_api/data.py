@@ -28,7 +28,7 @@ class Attributes:
 def cache_data(creator_fun):
     @functools.wraps(creator_fun)
     def decorator(**kargs):
-        path = Path(f"{creator_fun.__name__}") #  -{str(hash(str(kargs)))}") # add kargs
+        path = Path(f".tmp/{creator_fun.__name__}") #  -{str(hash(str(kargs)))}") # add kargs
         if path.exists():
             with path.open('rb') as fh:
                 data = pickle.load(fh)
