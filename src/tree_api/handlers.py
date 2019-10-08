@@ -4,10 +4,30 @@ from yarl import URL
 
 routes = web.RouteTableDef()
 
+
 def _get_node_url(identifier: str, request: web.Request) -> str:
     base = request.url.origin()
     url = URL.join(base, request.app.router['get_node'].url_for(node_id=identifier))
     return str(url)
+
+def _load_tree(request: web.Request):
+    # FIXME: check header!!!
+    # FIXME: load this specific tree!?
+    # FIXME: format?
+    tree_id = request.query.get('host')
+
+    # FIXME: should load tree specified in host!
+    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+    return tree
+
+
+def _create_basic_hrefs(request: web.Request):
+    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+    hrefs = [
+        {'rel': 'self', 'href': str(request.url) },
+        {'rel': 'root', 'href': _get_node_url(tree.root, request)}
+    ]
+    return hrefs
 
 # TODO: schemas? marshmallow? Attrs?
 
@@ -16,13 +36,7 @@ def _get_node_url(identifier: str, request: web.Request) -> str:
 
 @routes.get("/", name='get_tree')
 async def get_tree(request: web.Request):
-    # FIXME: check header!!!
-    # FIXME: load this specific tree!?
-    # FIXME: format?
-    tree_id = request.query.get('host') or request.headers.get('host')
-
-    # FIXME: should load tree specified in host!
-    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+    tree = _load_tree(request)
 
     # Building data
     data = {
@@ -36,36 +50,37 @@ async def get_tree(request: web.Request):
     # }
     # data.update(timestamps)
 
-    data['hrefs'] = [
-         {'rel': 'self', 'href': str(request.url) },
-         {'rel': 'root', 'href': _get_node_url(tree.root, request)}
-    ]
+    data['hrefs'] = _create_basic_hrefs(request)
 
     return web.json_response(data)
 
 @routes.get("/nodes", name='get_nodes')
 async def get_nodes(request: web.Request):
-    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+    tree = _load_tree(request)
 
     limit = int(request.query.get('limit', tree.size()))
     marker = request.query.get('marker')
 
     include = marker is None
     
-    data = []
+    nodes = []
     for node in tree.all_nodes_itr():
         if node.identifier == marker:
             include = True
         if include:
-            data.append(node.identifier)
-            if len(data) > limit:
+            nodes.append(node.identifier)
+            if len(nodes) >= limit:
                 break
 
+    data = {
+        'nodes': nodes,
+        'hrefs': _create_basic_hrefs(request)
+    }
     return web.json_response(data)
 
 @routes.get("/nodes/{node_id}", name='get_node')
 async def get_node(request: web.Request):
-    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+    tree = _load_tree(request)
 
     node_id = request.match_info['node_id']
     node = tree[node_id]

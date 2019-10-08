@@ -6,7 +6,7 @@ info:
 paths:
   /:
     parameters:
-      - $ref: '#/components/parameters/treeQuery'
+        - $ref: '#/components/parameters/treeQuery'
 
     get:
       operationId: get_tree
@@ -35,6 +35,7 @@ paths:
   /nodes:
     parameters:
       - $ref: '#/components/parameters/treeQuery'
+
     get:
       operationId: get_nodes
       description: "Returns UUIDs for all the nodes in a tree (other than the root group)."
@@ -68,12 +69,11 @@ paths:
                           format: uuid
                   - $ref: '#/components/schemas/RelatedResources'
               example:
+                description: "Calls /nodes?limit=3&marker=d29dced4-4399-4bdc-951d-d474a48db477"
                 nodes:
                   - "d29dced4-4399-4bdc-951d-d474a48db477"
                   - "5e92f325-2085-45ab-9c21-8a9019a2290d"
                   - "17895910-9d97-45d0-aeeb-0faaff44080e"
-                  - "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
-                  - "d3e0da1c-e7a4-4adb-960c-00b477cb1df5"
                 href:
                   - self: "self"
                     href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
@@ -123,6 +123,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/nodeId'
       - $ref: '#/components/parameters/treeQuery'
+
 
     get:
       operationId: get_node_children
@@ -251,12 +252,12 @@ components:
       
     treeQuery:
       in: query
-      description: "specifies tree if DNS server is not setup"
+      description: "specifies tree in host"
       name: host
       schema:
         type: string
         #TODO: format ?host=tall.public.data.hdfnode.org
-    
+
     nodeId:
       in: path
       name: node_id
