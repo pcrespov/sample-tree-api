@@ -95,6 +95,8 @@ def setup_data(app: web.Application):
     log.debug("building sample tree")
 
     tree = create_large_tree(max_depth=MAX_DEPTH, max_children=MAX_CHILDREN)
+    # TODO: add some stats here of the generated tree
+    # TODO2: use tree as cache of a REALLY large tree
     log.debug("saving sample tree")
 
     app[f"{DATA_NAMESPACE}.tree"] = tree
