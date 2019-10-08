@@ -89,7 +89,7 @@ def create_sample_tree():
 def setup_data(app: web.Application):
     #tree = create_sample_tree()
     log.debug("building sample tree")
-    tree = create_large_tree(max_depth=4, max_children=20)
+    tree = create_large_tree(max_depth=4, max_children=30)
     log.debug("saving sample tree")
 
     app[f"{DATA_NAMESPACE}.tree"] = tree

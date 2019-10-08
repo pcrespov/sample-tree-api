@@ -8,6 +8,7 @@ from .data import DATA_NAMESPACE, Node, Tree
 
 
 routes = web.RouteTableDef()
+MAX_ITEMS_PER_PAGE = 30
 
 
 def _get_node_url(identifier: str, request: web.Request) -> str:
@@ -131,7 +132,7 @@ async def get_nodes(request: web.Request):
     tree = _get_tree(request)
 
     # filter
-    limit = int(request.query.get('limit', tree.size()))
+    limit = int(request.query.get('limit')) or MAX_ITEMS_PER_PAGE
     marker = request.query.get('marker')
     nodes = _get_collection_page(tree.all_nodes_itr(), marker, limit)
 
@@ -151,7 +152,7 @@ async def get_node(request: web.Request):
     data = _get_node_meta(node, tree, None, include_attrs=True)
 
     # filter
-    limit = int(request.query.get('limit', tree.size()))
+    limit = int(request.query.get('limit')) or MAX_ITEMS_PER_PAGE
     marker = request.query.get('marker')
     children = _get_collection_page(tree.children(node_id) or [], marker, limit)
 
