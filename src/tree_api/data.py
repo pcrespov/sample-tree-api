@@ -30,8 +30,10 @@ class Attributes:
 def cache_data(creator_fun):
     @functools.wraps(creator_fun)
     def decorator(**kargs):
-        path = Path(f".tmp/{creator_fun.__name__}") #  -{str(hash(str(kargs)))}") # add kargs
+        suffix = "x".join(map(str, kargs.values()))
+        path = Path(f".tmp/{creator_fun.__name__}-{suffix}")
         if path.exists():
+            log.info(f"Using cache %s", path)
             with path.open('rb') as fh:
                 data = pickle.load(fh)
         else:

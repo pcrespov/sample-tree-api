@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := help
+DEFAULT_PORT  ?= 8081
 
 .venv:
 	# creating virtual environment
@@ -15,7 +16,7 @@ src/simcore_service_tree.egg-info: .venv
 	@.venv/bin/pip install -e .
 
 up-devel: devenv ## starts server in development mode
-	@.venv/bin/simcore-service-api --port=${DEFAULT_PORT:-8081}
+	@.venv/bin/simcore-service-api --port=${DEFAULT_PORT}
 
 
 .PHONY: clean
@@ -31,5 +32,3 @@ clean: .check-clean ## cleans unversioned and ignored files
 .PHONY: help
 help: ## this colorful help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-
