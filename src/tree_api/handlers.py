@@ -9,10 +9,21 @@ def _get_node_url(identifier: str, request: web.Request) -> str:
     url = URL.join(base, request.app.router['get_node'].url_for(node_id=identifier))
     return str(url)
 
+# TODO: schemas? marshmallow? Attrs?
+
+
+# Handlers ------------
 
 @routes.get("/", name='get_tree')
 async def get_tree(request: web.Request):
-    tree = request.app[f"{DATA_NAMESPACE}.tree"]    
+    # FIXME: check header!!!
+    # FIXME: load this specific tree!?
+    # FIXME: format?
+    tree_id = request.query.get('host') or request.headers.get('host')
+
+    # FIXME: should load tree specified in host!
+    tree = request.app[f"{DATA_NAMESPACE}.tree"]
+
     # Building data
     data = {
         'name': tree.name,
@@ -25,11 +36,10 @@ async def get_tree(request: web.Request):
     # }
     # data.update(timestamps)
 
-    related_resources = [
+    data['hrefs'] = [
          {'rel': 'self', 'href': str(request.url) },
          {'rel': 'root', 'href': _get_node_url(tree.root, request)}
     ]
-    data['hrefs'] = related_resources
 
     return web.json_response(data)
 
@@ -52,7 +62,6 @@ async def get_nodes(request: web.Request):
                 break
 
     return web.json_response(data)
-
 
 @routes.get("/nodes/{node_id}", name='get_node')
 async def get_node(request: web.Request):

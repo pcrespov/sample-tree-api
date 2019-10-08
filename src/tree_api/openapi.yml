@@ -21,8 +21,13 @@ paths:
                   - $ref: '#/components/schemas/Tree'
                   - $ref: '#/components/schemas/RelatedResources'
               example:
-                name: "Modeling Tree"
+                name: "Model Domain"
                 root: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
+                hrefs:
+                  - rel: self
+                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/"
+                  - ref: root
+                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
 
         '400':
           description: "The request was not structured correctly (e.g. a required key was missing)."
@@ -74,7 +79,6 @@ paths:
                     href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                   - self: "root"
                     href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
-
 
   /nodes/{node_id}:
     parameters:
