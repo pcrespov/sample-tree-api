@@ -1,8 +1,8 @@
-openapi: 3.0.2
+openapi: 3.0.0
 info:
-  title: "tree API"
-  version: "1.0.0"
-  description: "OpenAPI specifications for a simple API that exposes a tree data-structure"
+  version: '1.0.0'
+  title: 'tree API'
+  description: 'OpenAPI specifications for a simple API that exposes a tree data-structure'
 paths:
   /:
     parameters:
@@ -19,6 +19,7 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/Tree'
+                  - $ref: '#/components/schemas/RelatedResources'
               example:
                 name: "Modeling Tree"
                 root: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
@@ -27,11 +28,12 @@ paths:
           description: "The request was not structured correctly (e.g. a required key was missing)."
    
   /nodes:
+    parameters:
+      - $ref: '#/components/parameters/treeQuery'
     get:
       operationId: get_nodes
       description: "Returns UUIDs for all the nodes in a tree (other than the root group)."
       parameters:
-        - $ref: '#/components/parameters/treeQuery'
         - in: query
           name: limit
           description: "If provided, a positive integer value specifying the maximum number of UUID’s to return"
@@ -59,6 +61,7 @@ paths:
                         items: 
                           type: string
                           format: uuid
+                  - $ref: '#/components/schemas/RelatedResources'
               example:
                 nodes:
                   - "d29dced4-4399-4bdc-951d-d474a48db477"
@@ -66,6 +69,12 @@ paths:
                   - "17895910-9d97-45d0-aeeb-0faaff44080e"
                   - "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                   - "d3e0da1c-e7a4-4adb-960c-00b477cb1df5"
+                href:
+                  - self: "self"
+                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
+                  - self: "root"
+                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
+
 
   /nodes/{node_id}:
     parameters:
@@ -83,44 +92,85 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/Node'
-                  - type: object
-                    properties:
-                      children:
-                        type: array
-                        nullable: true
-                        items:
-                          $ref: '#/components/schemas/Node'
-                      parent:
-                        $ref: '#/components/schemas/Node'
+                  - $ref: '#/components/schemas/RelatedResources'
               examples:
                 Group1Node:
                   summary: "Example of a non-leaf"
                   value:
                     id: "17895910-9d97-45d0-aeeb-0faaff44080e"
                     name: "Group 1"
-                    children:
-                      - id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
-                        name: "Cylinder 1"
-                        href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0
-                      - id: "d3e0da1c-e7a4-4adb-960c-00b477cb1df5"
-                        name: "Sphere 1"
-                        href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/d3e0da1c-e7a4-4adb-960c-00b477cb1df5
                     parent: 
                       id: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
                       name: "Model"
-                      href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71
+                      href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
                 CylinderLeaf:
                   summary: "Example of cylinder leaf"
                   value:
                     id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                     name: "Cylinder 1"
-                    href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0
+                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                     children: null
                     parent: 
                       id: "17895910-9d97-45d0-aeeb-0faaff44080e"
                       name: "Group1"
-                      href: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0/nodes/17895910-9d97-45d0-aeeb-0faaff44080e
+                      href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/17895910-9d97-45d0-aeeb-0faaff44080e"
  
+  /nodes/{node_id}/children:
+    parameters:
+      - $ref: '#/components/parameters/nodeId'
+      - $ref: '#/components/parameters/treeQuery'
+
+    get:
+      operationId: get_node_children
+      description: "list of children"
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                  type: object
+                  properties:
+                    children:
+                      type: array
+                      nullable: true
+                      items:
+                        $ref: '#/components/schemas/Node'
+
+  /nodes/{node_id}/attributes:
+    parameters:
+      - $ref: '#/components/parameters/nodeId'
+      - $ref: '#/components/parameters/treeQuery'
+
+    get:
+      operationId: get_node_attributes
+      description: "Extra detail on metadata of node"
+      responses:
+        '200':
+          description: "returns all detailed metadata"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/NodeAttributes'
+
+  /nodes/{node_id}/data:
+    parameters:
+      - $ref: '#/components/parameters/nodeId'
+      - $ref: '#/components/parameters/treeQuery'
+
+    get:
+      operationId: get_node_data
+      description: "Data represented by the node"
+      responses:
+        '200':
+          description: "returns data"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/NodeData'
+
 components:
   schemas:
 
@@ -149,17 +199,38 @@ components:
           description: "Number of children"
           type: integer
           minimum: 0
+          readOnly: true
         href:
           description: "link to node resource"
           type: string
+          readOnly: true
 
+    NodeAttributes:
+      type: object
+      description: "Generic attributes a tree node. "
+      properties:
+        expanded:
+          type: boolean
+          default: false
+        checked:
+          type: boolean
+          default: false
+        locked:
+          description: "This node cannot be modified. Readonly."
+          type: boolean
+          default: false
+
+    NodeData:
+      type: object
+      description: "Data associated to this node. Has a free from JSON defined by NodeSchema??"
+      nullable: true
+      additionalProperties: true
 
     RelatedResources:
       type: object
       properties:
         hrefs:
           description: "List to related resources"
-          # https://h5serv.readthedocs.io/en/latest/Hypermedia.html
           type: array
           items:
             type: object
@@ -167,7 +238,7 @@ components:
               rel:
                 description: type of relation
                 type: string
-                enum: [attributes ,data ,database ,groupbase ,home ,owner ,root ,self, typebase]
+                enum: [attributes, data, node, parent, root, self]
               href:
                 description: link
                 type: string
@@ -191,8 +262,7 @@ components:
         type: string
         format: uuid
 
-
 # Added by API Auto Mocking Plugin
 servers:
   - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/pcrespov/treeapi/1.0
+    url: https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0

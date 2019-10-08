@@ -15,7 +15,7 @@ src/simcore_service_tree.egg-info: .venv  ## builds development environment
 	@.venv/bin/pip install -e .
 
 up-devel: devenv
-	simcore-service-api --port=8081
+	simcore-service-api --port=8080
 
 
 .PHONY: clean
