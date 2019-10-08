@@ -56,7 +56,7 @@ def _get_node_attributes(node: Node) -> Dict:
     }
     return data
 
-def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None):
+def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, tree=False):
     base = request.url.origin()
 
     hrefs = [{
@@ -64,11 +64,24 @@ def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, att
         'href': str(request.url) 
         }, 
     ]
-    
+
+    if tree:
+        hrefs.append({
+            'rel': 'tree', 
+            'href': str(URL.join(base, request.app.router['get_tree'].url_for()))
+        })
+
+
     if root:
         hrefs.append({
             'rel': 'root', 
             'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=root)))
+        })
+
+    if nodes:
+        hrefs.append({
+            'rel': 'nodes', 
+            'href': str(URL.join(base, request.app.router['get_nodes'].url_for()))
         })
 
     if owner:
@@ -120,9 +133,9 @@ async def get_tree(request: web.Request):
     tree = _get_tree(request)
 
     data = {
-        'name': tree.name,
+        'tree': tree.name,
         'root': tree.root,
-        'hrefs': _create_hrefs(request, root=tree.root)
+        'hrefs': _create_hrefs(request, root=tree.root, nodes=True)
     }
 
     return web.json_response(data)
@@ -137,8 +150,9 @@ async def get_nodes(request: web.Request):
     nodes = _get_collection_page(tree.all_nodes_itr(), marker, limit)
 
     data = {
+        'nodesCount': tree.size(),
         'nodes': [ _get_node_meta(n, tree, None, include_count=False) for n in nodes],
-        'hrefs': _create_hrefs(request, root=tree.root)
+        'hrefs': _create_hrefs(request, root=tree.root, tree=True)
     }
     return web.json_response(data)
 
