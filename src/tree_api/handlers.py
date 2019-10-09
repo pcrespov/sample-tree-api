@@ -48,10 +48,13 @@ def _get_node_meta(node: Node, tree: Tree, request: web.Request, *, \
 
 def _get_node_attributes(node: Node) -> Dict:
     # TODO: move to node.data! payload
+
+    # FIXME: add upon creation instead
+    num = ord(node.identifier.split('-')[0][-1])
     data = {
         'expanded': node.expanded,
-        'checked': getattr(node, 'checked', False),
-        'locked': getattr(node, 'locked', False)
+        'checked': bool(num % 3 ),  # getattr(node, 'checked', False),
+        'locked':  bool(num % 2 )   #getattr(node, 'locked', False)
     }
     return data
 
