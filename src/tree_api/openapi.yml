@@ -1,4 +1,4 @@
-openapi: 3.0.2
+openapi: 3.0.0
 info:
   version: '1.0.0'
   title: 'tree API'
@@ -224,18 +224,22 @@ components:
       type: object
       properties:
         hrefs:
-          description: "List to related resources"
-          type: array
-          items:
-            type: object
-            properties:
-              rel:
-                description: type of relation
-                type: string
-                enum: [attributes, data, node, parent, root, self]
-              href:
-                description: link
-                type: string
+          description: "url links to related resources"
+          type: object
+          readOnly: true
+          required:
+            - self
+          properties:
+            attributes:
+              type: string
+            data:
+              type: string
+            owner:
+              type: string
+            parent:
+              type: string
+            self:
+              type: string
 
   parameters:
 
