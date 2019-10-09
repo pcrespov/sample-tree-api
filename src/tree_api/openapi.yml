@@ -42,18 +42,8 @@ paths:
       operationId: get_nodes
       description: "Returns UUIDs for all the nodes in a tree (other than the root group)."
       parameters:
-        - in: query
-          name: limit
-          description: "If provided, a positive integer value specifying the maximum number of UUID’s to return"
-          schema:
-            type: integer
-            minimum: 0
-        - in: query
-          name: marker
-          description: "If provided, a string value indicating that only UUID’s that occur after the marker value will be returned."
-          schema:
-            type: string
-            format: uuid
+        - $ref: '#/components/parameters/pageLimitQuery'
+        - $ref: '#/components/parameters/pageMarkerQuery'
       responses:
         '200':
           description: ok
@@ -64,7 +54,11 @@ paths:
                   - type: object
                     description: "Flat list of nodes in tree"
                     properties:
+                      nodesCount:
+                        type: integer
+                        minimum: 0
                       nodes:
+                        description: list of nodes in tree limited by page options
                         type: array
                         items:
                           type: string
@@ -72,6 +66,7 @@ paths:
                   - $ref: '#/components/schemas/RelatedResources'
               example:
                 description: "Calls /nodes?limit=3&marker=d29dced4-4399-4bdc-951d-d474a48db477"
+                nodesCount: 7462
                 nodes:
                   - "d29dced4-4399-4bdc-951d-d474a48db477"
                   - "5e92f325-2085-45ab-9c21-8a9019a2290d"
@@ -90,6 +85,9 @@ paths:
     get:
       operationId: get_node
       description: "Returns information about the node with the UUID given in the URI"
+      parameters:
+        - $ref: '#/components/parameters/pageLimitQuery'
+        - $ref: '#/components/parameters/pageMarkerQuery'
       responses:
         '200':
           description: ok
@@ -98,51 +96,9 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/Node'
+                  - $ref: '#/components/schemas/NodeAttributes'
+                  - $ref: '#/components/schemas/ChildrenArray'
                   - $ref: '#/components/schemas/RelatedResources'
-              examples:
-                Group1Node:
-                  summary: "Example of a non-leaf"
-                  value:
-                    id: "17895910-9d97-45d0-aeeb-0faaff44080e"
-                    name: "Group 1"
-                    parent:
-                      id: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
-                      name: "Model"
-                      href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
-                CylinderLeaf:
-                  summary: "Example of cylinder leaf"
-                  value:
-                    id: "e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
-                    name: "Cylinder 1"
-                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
-                    children: null
-                    parent:
-                      id: "17895910-9d97-45d0-aeeb-0faaff44080e"
-                      name: "Group1"
-                      href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/17895910-9d97-45d0-aeeb-0faaff44080e"
-
-  /nodes/{node_id}/children:
-    parameters:
-      - $ref: '#/components/parameters/nodeId'
-      - $ref: '#/components/parameters/treeQuery'
-
-
-    get:
-      operationId: get_node_children
-      description: "list of children"
-      responses:
-        '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                  type: object
-                  properties:
-                    children:
-                      type: array
-                      nullable: true
-                      items:
-                        $ref: '#/components/schemas/Node'
 
   /nodes/{node_id}/attributes:
     parameters:
@@ -202,14 +158,20 @@ components:
     Node:
       type: object
       nullable: true
+      required:
+        - id
+        - tag
       properties:
+        # TODO: these are attributes
         id:
           description: "UUID of requested node"
           type: string
           format: uuid
-        name:
+          readOnly: true
+        tag:
           description: "User name of the node"
           type: string
+        # this is derived info
         childrenCount:
           description: "Number of children"
           type: integer
@@ -219,6 +181,12 @@ components:
           description: "Gets level of depth of a given node"
           type: integer
           minimum: 1
+          readOnly: true
+        # this is extra
+        href:
+          description: "self node reference"
+          type: string
+          readOnly: true
 
     NodeAttributes:
       type: object
@@ -236,6 +204,15 @@ components:
           type: boolean
           default: false
 
+    ChildrenArray:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Node'
+              - $ref: '#/components/schemas/NodeAttributes'
 
     NodeData:
       type: object
@@ -278,6 +255,23 @@ components:
       schema:
         type: string
         format: uuid
+
+    pageLimitQuery:
+      in: query
+      name: limit
+      description: "If provided, a positive integer value specifying the maximum number of UUID’s to return"
+      schema:
+        type: integer
+        minimum: 0
+
+    pageMarkerQuery:
+      in: query
+      name: marker
+      description: "If provided, a string value indicating that only UUID’s that occur after the marker value will be returned."
+      schema:
+        type: string
+        format: uuid
+
 
 # Added by API Auto Mocking Plugin
 servers:
