@@ -58,54 +58,30 @@ def _get_node_attributes(node: Node) -> Dict:
 def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, home=False):
     base = request.url.origin()
 
-    hrefs = [{
-        'rel': 'self',
-        'href': str(request.url)
-        },
-    ]
+    hrefs = {
+        'self': str(request.url)
+    }
 
     if home:
-        hrefs.append({
-            'rel': 'home',
-            'href': str(URL.join(base, request.app.router['get_home'].url_for()))
-        })
-
+        hrefs['home'] = str(URL.join(base, request.app.router['get_home'].url_for()))
 
     if root:
-        hrefs.append({
-            'rel': 'root',
-            'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=root)))
-        })
+        hrefs['root'] = str(URL.join(base, request.app.router['get_node'].url_for(node_id=root)))
 
     if nodes:
-        hrefs.append({
-            'rel': 'nodes',
-            'href': str(URL.join(base, request.app.router['get_nodes'].url_for()))
-        })
+        hrefs['nodes'] = str(URL.join(base, request.app.router['get_nodes'].url_for()))
 
     if owner:
-        hrefs.append({
-            'rel': 'owner',
-            'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=owner)))
-        })
+        hrefs['owner'] = str(URL.join(base, request.app.router['get_node'].url_for(node_id=owner)))
 
     if parent:
-        hrefs.append({
-            'rel': 'parent',
-            'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=parent)))
-        })
+        hrefs['parent'] = str(URL.join(base, request.app.router['get_node'].url_for(node_id=parent)))
 
     if data:
-        hrefs.append({
-            'rel': 'data',
-            'href': str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=data)))
-        })
+        hrefs['data'] = str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=data)))
 
     if attributes:
-        hrefs.append({
-            'rel': 'attributes',
-            'href': str(URL.join(base, request.app.router['get_node_attributes'].url_for(node_id=attributes)))
-        })
+        hrefs['attributes'] = str(URL.join(base, request.app.router['get_node_attributes'].url_for(node_id=attributes)))
     return hrefs
 
 def _get_collection_page(nodes_iterable, marker, limit):
