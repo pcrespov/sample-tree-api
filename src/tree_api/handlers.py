@@ -8,7 +8,6 @@ from .data import DATA_NAMESPACE, Node, Tree
 
 
 routes = web.RouteTableDef()
-MAX_ITEMS_PER_PAGE = 20
 
 
 def _get_node_url(identifier: str, request: web.Request) -> str:
@@ -27,8 +26,8 @@ def _get_tree(request: web.Request):
     return tree
 
 def _get_node_meta(node: Node, tree: Tree, request: web.Request, *, \
-        include_count=True, 
-        include_attrs=False, 
+        include_count=True,
+        include_attrs=False,
         include_depth=True) -> Dict:
     data = {
         'id': node.identifier,
@@ -56,85 +55,87 @@ def _get_node_attributes(node: Node) -> Dict:
     }
     return data
 
-def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, tree=False):
+def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, home=False):
     base = request.url.origin()
 
     hrefs = [{
-        'rel': 'self', 
-        'href': str(request.url) 
-        }, 
+        'rel': 'self',
+        'href': str(request.url)
+        },
     ]
 
-    if tree:
+    if home:
         hrefs.append({
-            'rel': 'tree', 
-            'href': str(URL.join(base, request.app.router['get_tree'].url_for()))
+            'rel': 'home',
+            'href': str(URL.join(base, request.app.router['get_home'].url_for()))
         })
 
 
     if root:
         hrefs.append({
-            'rel': 'root', 
+            'rel': 'root',
             'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=root)))
         })
 
     if nodes:
         hrefs.append({
-            'rel': 'nodes', 
+            'rel': 'nodes',
             'href': str(URL.join(base, request.app.router['get_nodes'].url_for()))
         })
 
     if owner:
         hrefs.append({
-            'rel': 'owner', 
+            'rel': 'owner',
             'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=owner)))
         })
 
     if parent:
         hrefs.append({
-            'rel': 'parent', 
+            'rel': 'parent',
             'href': str(URL.join(base, request.app.router['get_node'].url_for(node_id=parent)))
         })
-    
+
     if data:
         hrefs.append({
-            'rel': 'data', 
+            'rel': 'data',
             'href': str(URL.join(base, request.app.router['get_node_data'].url_for(node_id=data)))
         })
 
     if attributes:
         hrefs.append({
-            'rel': 'attributes', 
+            'rel': 'attributes',
             'href': str(URL.join(base, request.app.router['get_node_attributes'].url_for(node_id=attributes)))
         })
     return hrefs
 
 def _get_collection_page(nodes_iterable, marker, limit):
     nodes = []
+    # TODO: refactor. if marker, exhaust iterator and if limit nodes[found:found+limit]
     include = marker is None
     for node in nodes_iterable:
         if node.identifier == marker:
             include = True
         if include:
             nodes.append(node)
-            if len(nodes) >= limit:
+            if limit <= len(nodes):
                 break
     return nodes
 
 
 # TODO: schemas? marshmallow? Attrs?
 # TODO: add filtering, scoping?
-# TODO: 
+# TODO:
 
 # Handlers ------------
 
-@routes.get("/", name='get_tree')
-async def get_tree(request: web.Request):
+@routes.get("/", name='get_home')
+async def get_home(request: web.Request):
     tree = _get_tree(request)
 
     data = {
-        'tree': tree.name,
+        'name': tree.name,
         'root': tree.root,
+        'preferences': tree.preferences,
         'hrefs': _create_hrefs(request, root=tree.root, nodes=True)
     }
 
@@ -145,14 +146,14 @@ async def get_nodes(request: web.Request):
     tree = _get_tree(request)
 
     # filter
-    limit = int(request.query.get('limit', MAX_ITEMS_PER_PAGE))
+    limit = int(request.query.get('limit', tree.preferences['maxItemsPerPage']))
     marker = request.query.get('marker')
     nodes = _get_collection_page(tree.all_nodes_itr(), marker, limit)
 
     data = {
         'nodesCount': tree.size(),
         'nodes': [ _get_node_meta(n, tree, None, include_count=False) for n in nodes],
-        'hrefs': _create_hrefs(request, root=tree.root, tree=True)
+        'hrefs': _create_hrefs(request, root=tree.root, home=True)
     }
     return web.json_response(data)
 
@@ -166,7 +167,7 @@ async def get_node(request: web.Request):
     data = _get_node_meta(node, tree, None, include_attrs=True)
 
     # filter
-    limit = int(request.query.get('limit', MAX_ITEMS_PER_PAGE))
+    limit = int(request.query.get('limit', tree.preferences['maxItemsPerPage']))
     marker = request.query.get('marker')
     children = _get_collection_page(tree.children(node_id) or [], marker, limit)
 
@@ -176,9 +177,9 @@ async def get_node(request: web.Request):
 
     parent = tree.parent(node_id)
     data['hrefs'] = _create_hrefs(request,
-        root=tree.root, 
-        parent=parent.identifier if parent else None, 
-        data=node_id, 
+        root=tree.root,
+        parent=parent.identifier if parent else None,
+        data=node_id,
         attributes=node_id)
 
     return web.json_response(data)
@@ -199,17 +200,17 @@ async def get_node_attributes(request: web.Request):
 
 
 @routes.get("/nodes/{node_id}/data", name='get_node_data')
-async def get_node_data(request: web.Request):    
+async def get_node_data(request: web.Request):
     tree = _get_tree(request)
     node_id = request.match_info['node_id']
-    
+
     data ={}
 
     #TODO:  move to data.py
     data['schema'] = yaml.safe_load("""
     type: object
     properties:
-        foo: 
+        foo:
             type: integer
             description: 'some random integer'
         bar:
@@ -225,7 +226,7 @@ async def get_node_data(request: web.Request):
                     type: string
                     description: 'something different from one'
     """)
-    
+
 
     data['data'] = {
         'foo': 3,

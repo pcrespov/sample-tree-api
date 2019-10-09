@@ -9,8 +9,8 @@ paths:
         - $ref: '#/components/parameters/treeQuery'
 
     get:
-      operationId: get_tree
-      description: "Retrieves information about the requested tree"
+      operationId: get_home
+      description: "Home entrypoint with information about the tree API"
       responses:
         '200':
           description: ok
@@ -23,15 +23,17 @@ paths:
               example:
                 name: "Model Domain"
                 root: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
+                preferences:
+                  maxItemsPerPage: 20
                 hrefs:
                   - rel: self
                     href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/"
                   - ref: root
                     href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
+                  - rel: nodes
+                    href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes"
 
-        '400':
-          description: "The request was not structured correctly (e.g. a required key was missing)."
-   
+
   /nodes:
     parameters:
       - $ref: '#/components/parameters/treeQuery'
@@ -64,7 +66,7 @@ paths:
                     properties:
                       nodes:
                         type: array
-                        items: 
+                        items:
                           type: string
                           format: uuid
                   - $ref: '#/components/schemas/RelatedResources'
@@ -103,7 +105,7 @@ paths:
                   value:
                     id: "17895910-9d97-45d0-aeeb-0faaff44080e"
                     name: "Group 1"
-                    parent: 
+                    parent:
                       id: "7865b1fa-e680-11e9-ba43-ac9e17b76a71"
                       name: "Model"
                       href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/7865b1fa-e680-11e9-ba43-ac9e17b76a71"
@@ -114,11 +116,11 @@ paths:
                     name: "Cylinder 1"
                     href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/e7c5e7f0-a1e3-4d2a-b958-494c33923fa0"
                     children: null
-                    parent: 
+                    parent:
                       id: "17895910-9d97-45d0-aeeb-0faaff44080e"
                       name: "Group1"
                       href: "https://virtserver.swaggerhub.com/pcrespov/tree/1.0.0/nodes/17895910-9d97-45d0-aeeb-0faaff44080e"
- 
+
   /nodes/{node_id}/children:
     parameters:
       - $ref: '#/components/parameters/nodeId'
@@ -188,6 +190,14 @@ components:
         root:
           type: string
           description: "The UUID of the root node of this tree"
+        preferences:
+          type: object
+          description: "tree API preferences"
+          properties:
+            maxItemsPerPage:
+              type: integer
+              minimum: 1
+              default: 20
 
     Node:
       type: object
@@ -225,7 +235,7 @@ components:
           description: "This node is set as read-only."
           type: boolean
           default: false
-        
+
 
     NodeData:
       type: object
@@ -251,7 +261,7 @@ components:
                 type: string
 
   parameters:
-      
+
     treeQuery:
       in: query
       description: "specifies tree in host"

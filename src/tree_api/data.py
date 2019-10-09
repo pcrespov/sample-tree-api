@@ -13,8 +13,10 @@ from treelib import Node, Tree
 fake = Faker()
 
 DATA_NAMESPACE = __name__
+
 MAX_CHILDREN = int(os.environ.get("MAX_CHILDREN",30))
 MAX_DEPTH = int(os.environ.get("MAX_DEPTH",4))
+MAX_ITEMS_PER_PAGE = 20
 
 log = logging.getLogger(__name__)
 
@@ -22,8 +24,8 @@ log = logging.getLogger(__name__)
 @attr.s(auto_attribs=True)
 class Attributes:
     pass
-#    created : 
-#    last_modified : 
+#    created :
+#    last_modified :
 #
     # 2019-10-04T08:36:01Z
 
@@ -35,7 +37,7 @@ def cache_data(creator_fun):
         suffix = "x".join(map(str, kargs.values()))
         path = Path(f".tmp/{creator_fun.__name__}-{suffix}")
         if path.exists():
-            log.info(f"Using cache %s", path)
+            log.info("Using cache %s", path)
             with path.open('rb') as fh:
                 data = pickle.load(fh)
         else:
@@ -76,7 +78,7 @@ def create_sample_tree():
     #   ├── Grid     5e92f325-2085-45ab-9c21-8a9019a2290d
     #   └── Group 1  17895910-9d97-45d0-aeeb-0faaff44080e
     #       ├── Cylinder 1  e7c5e7f0-a1e3-4d2a-b958-494c33923fa0
-    #       └── Sphere 1    d3e0da1c-e7a4-4adb-960c-00b477cb1df5    
+    #       └── Sphere 1    d3e0da1c-e7a4-4adb-960c-00b477cb1df5
 
     tree = Tree()
     tree.name = "sample-tree"
@@ -90,18 +92,22 @@ def create_sample_tree():
     tree.create_node("Cylinder 1", parent=group1.identifier, data=Attributes())
     return tree
 
+
 def setup_data(app: web.Application):
     #tree = create_sample_tree()
     log.debug("building sample tree")
 
     tree = create_large_tree(max_depth=MAX_DEPTH, max_children=MAX_CHILDREN)
+
+    # TODO: needs to comply with openapi.Tree schema
+    tree.preferences = {
+        'maxItemsPerPage': MAX_ITEMS_PER_PAGE
+    }
     # TODO: add some stats here of the generated tree
     # TODO2: use tree as cache of a REALLY large tree
     log.debug("saving sample tree")
 
     app[f"{DATA_NAMESPACE}.tree"] = tree
-    
-
 
 __all__ = [
     'Node', 'Tree'
