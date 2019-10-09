@@ -25,7 +25,7 @@ def _get_tree(request: web.Request):
     tree = request.app[f"{DATA_NAMESPACE}.tree"]
     return tree
 
-def _get_node_meta(node: Node, tree: Tree, request: web.Request, *, \
+def _get_node_meta(node: Node, tree: Tree, *, \
         include_count=True,
         include_attrs=False,
         include_depth=True) -> Dict:
@@ -42,8 +42,7 @@ def _get_node_meta(node: Node, tree: Tree, request: web.Request, *, \
     if include_attrs:
         data.update(_get_node_attributes(node))
 
-    if request is not None:
-        data['href'] = _get_node_url(node.identifier, request)
+
     return data
 
 def _get_node_attributes(node: Node) -> Dict:
@@ -131,7 +130,7 @@ async def get_nodes(request: web.Request):
 
     data = {
         'nodesCount': tree.size(),
-        'nodes': [ _get_node_meta(n, tree, None, include_count=False) for n in nodes],
+        'nodes': [ _get_node_meta(n, tree, include_count=False) for n in nodes],
         'hrefs': _create_hrefs(request, root=tree.root, home=True)
     }
     return web.json_response(data)
@@ -142,24 +141,31 @@ async def get_node(request: web.Request):
 
     node_id = request.match_info['node_id']
 
-    node = tree[node_id]
-    data = _get_node_meta(node, tree, None, include_attrs=True)
-
     # filter
     limit = int(request.query.get('limit', tree.preferences['maxItemsPerPage']))
     marker = request.query.get('marker')
     children = _get_collection_page(tree.children(node_id) or [], marker, limit)
 
-    data['children'] = [ _get_node_meta(child, tree, request, include_attrs=True, include_depth=False)
-        for child in children
-    ] or None
+    # NOTE: Upon request of OM, all children folder shall have *the same* layout! I personally do not like this.
+    def _build_data(anode: Node, include_children: bool):
+        # NOTE: 'tree' and 'children' are taken from the outer context
+        adata = _get_node_meta(anode, tree, include_attrs=True)
 
-    parent = tree.parent(node_id)
-    data['hrefs'] = _create_hrefs(request,
-        root=tree.root,
-        parent=parent.identifier if parent else None,
-        data=node_id,
-        attributes=node_id)
+        if include_children:
+            adata['children'] = [ _build_data(child, False)
+                for child in children
+            ] or None
+
+        parent = tree.parent(anode.identifier)
+        adata['hrefs'] = _create_hrefs(request,
+            root=tree.root,
+            parent=parent.identifier if parent else None,
+            data=anode.identifier,
+            attributes=anode.identifier)
+        return adata
+
+    node = tree[node_id]
+    data = _build_data(node, True)
 
     return web.json_response(data)
 

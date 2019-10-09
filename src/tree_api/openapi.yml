@@ -213,6 +213,7 @@ components:
             allOf:
               - $ref: '#/components/schemas/Node'
               - $ref: '#/components/schemas/NodeAttributes'
+              - $ref: '#/components/schemas/RelatedResources'
 
     NodeData:
       type: object
