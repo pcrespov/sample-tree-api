@@ -57,12 +57,14 @@ def _get_node_attributes(node: Node) -> Dict:
     }
     return data
 
-def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, home=False):
+def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, home=False, self_override: Node=None):
     base = request.url.origin()
 
     hrefs = {
         'self': str(request.url)
     }
+    if self_override: #
+        hrefs['self'] = str(URL.join(base, request.app.router['get_node'].url_for(node_id=self_override.identifier)))
 
     if home:
         hrefs['home'] = str(URL.join(base, request.app.router['get_home'].url_for()))
@@ -161,7 +163,8 @@ async def get_node(request: web.Request):
             root=tree.root,
             parent=parent.identifier if parent else None,
             data=anode.identifier,
-            attributes=anode.identifier)
+            attributes=anode.identifier,
+            self_override=anode)
         return adata
 
     node = tree[node_id]

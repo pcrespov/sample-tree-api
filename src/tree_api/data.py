@@ -60,6 +60,8 @@ def create_large_tree(*,max_depth: int=5, max_children: int=20):
             N = random.randrange(max_children)
             names = [ f"{fake.name()}" for n in range(N)] # n random names # pylint: disable=no-member
             children = [ tree.create_node(name, parent=parent.identifier) for name in names ]
+
+            # TODO: add attributes
             for child in children:
                 create_children(child, depth+1)
 
