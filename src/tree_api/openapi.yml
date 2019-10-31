@@ -216,10 +216,12 @@ components:
               - $ref: '#/components/schemas/RelatedResources'
 
     NodeData:
-      type: object
-      description: "Data associated to this node. Has a free from JSON defined by NodeSchema??"
-      nullable: true
-      additionalProperties: true
+      allOf:
+        - type: object
+          description: "Data associated to this node. Has a free from JSON defined by NodeSchema??"
+          nullable: true
+          additionalProperties: true
+        - $ref: "#/components/schemas/PropertyGroup"
 
     RelatedResources:
       type: object
@@ -241,6 +243,87 @@ components:
               type: string
             self:
               type: string
+
+    PropertyBase:
+      type: object
+      properties:
+        description:
+          type: string
+        tooltip:
+          type: string
+        icon:
+          type: string
+        state:
+          type: integer
+
+    PropertyReal:
+      allOf:
+        - $ref: "#/components/schemas/PropertyBase"
+        - type: object
+          properties:
+            value:
+              type: number
+            minimum:
+              type: number
+            maximum:
+              type: number
+            unit:
+              type: string
+
+    PropertyColor:
+      allOf:
+        - $ref: "#/components/schemas/PropertyBase"
+        - type: object
+          properties:
+            red:
+              type: integer
+            green:
+              type: integer
+            blue:
+              type: integer
+            alpha:
+              type: integer
+
+    PropertyVec3:
+      allOf:
+        - $ref: "#/components/schemas/PropertyBase"
+        - type: object
+          properties:
+            value:
+              type: array
+              items:
+                type: number
+            unit:
+              type: string
+
+    PropertyString:
+      allOf:
+        - $ref: "#/components/schemas/PropertyBase"
+        - type: object
+          properties:
+            value:
+              type: string
+
+    PropertyBool:
+      allOf:
+        - $ref: "#/components/schemas/PropertyBase"
+        - type: object
+          properties:
+            value:
+              type: boolean
+
+    PropertyGroup:
+      allOf:
+        - $ref: "#/components/schemas/PropertyBase"
+        - type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/PropertyReal"
+              - $ref: "#/components/schemas/PropertyColor"
+              - $ref: "#/components/schemas/PropertyVec3"
+              - $ref: "#/components/schemas/PropertyString"
+              - $ref: "#/components/schemas/PropertyBool"
+
 
   parameters:
 
