@@ -19,6 +19,11 @@ up-devel: devenv ## starts server in development mode
 	@.venv/bin/simcore-service-api --port=${DEFAULT_PORT}
 
 
+.PHONY: tests
+tests: devenv ## run unit tests
+	@.venv/bin/pytest -vv tests
+
+
 .PHONY: clean
 clean: .check-clean ## cleans unversioned and ignored files
 	# remove unversioned

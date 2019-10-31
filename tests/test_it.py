@@ -21,17 +21,17 @@ def atree():
 
 import pickle
 
-from tree_api.data import create_large_tree
+from tree_api.data_sources import create_large_tree
 
 
 import yaml
 
 def test_schemas():
-        
+
     schema = yaml.safe_load("""
     type: object
     properties:
-        foo: 
+        foo:
             type: integer
             description: 'some random integer'
         bar:
@@ -48,7 +48,7 @@ def test_schemas():
                     description: 'something different from one'
     """)
     assert schema
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     print(schema    )
 
 
@@ -56,7 +56,7 @@ def test_caching():
 
     tree = create_large_tree(max_depth=2, max_children=2)
     tree2 = create_large_tree(max_depth=2, max_children=2)
-    
+
     import pdb; pdb.set_trace()
     tree.show()
 

@@ -4,7 +4,7 @@ import yaml
 from aiohttp import web
 from yarl import URL
 
-from .data import DATA_NAMESPACE, Node, Tree
+from .data_sources import DATA_NAMESPACE, Node, Tree
 
 
 routes = web.RouteTableDef()
