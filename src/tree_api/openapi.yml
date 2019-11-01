@@ -216,12 +216,15 @@ components:
               - $ref: '#/components/schemas/RelatedResources'
 
     NodeData:
-      allOf:
-        - type: object
-          description: "Data associated to this node. Has a free from JSON defined by NodeSchema??"
-          nullable: true
+      type: object
+      description: "Data associated to this node. Has a free from JSON defined by NodeSchema??"
+      nullable: true
+      properties:
+        schema:
+          $ref: "#/components/schemas/PropertyGroup"
+        data:
+          type: object
           additionalProperties: true
-        - $ref: "#/components/schemas/PropertyGroup"
 
     RelatedResources:
       type: object

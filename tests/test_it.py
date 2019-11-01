@@ -1,9 +1,12 @@
-from treelib import Node, Tree
 import json
-import pytest
-
+import pickle
 import uuid as uuidlib
 
+import pytest
+import yaml
+from treelib import Node, Tree
+
+from tree_api.data_sources import create_large_tree
 
 
 @pytest.fixture
@@ -18,13 +21,6 @@ def atree():
     tree.create_node("Cylinder 1", parent=group1.identifier)
     return tree
 
-
-import pickle
-
-from tree_api.data_sources import create_large_tree
-
-
-import yaml
 
 def test_schemas():
 
@@ -61,5 +57,3 @@ def test_caching():
     tree.show()
 
     tree2.show()
-
-

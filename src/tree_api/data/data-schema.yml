@@ -1,0 +1,67 @@
+$id: "https://osparc.io/schemas/data-schema.json"
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Selected Entity Properties"
+description: "A form for entities"
+type: object
+properties:
+  name:
+    type: string
+  visible:
+    type: boolean
+  color:
+    $ref: "#definitions/colorRGB"
+  opacity:
+    type: number
+    minimum: 0
+    maximum: 100
+  transformation:
+    type: object
+    properties:
+      rotation:
+        $ref: "#definitions/vec3Quantity"
+      translation:
+        $ref: "#definitions/vec3Quantity"
+  parameters:
+    type: object
+    properties:
+      radius:
+        $ref: "#definitions/realQuantity"
+      height:
+        $ref: "#definitions/realQuantity"
+      centered:
+        type: boolean
+        default: false
+  materials:
+    type: array
+    items:
+        type: string
+
+definitions:
+  colorRGB:
+    type: array
+    items:
+        type: integer
+        minimum: 0
+        maximum: 256
+    minItems: 3
+    maxItems: 3
+  realQuantity:
+    type: object
+    properties:
+      value:
+        type: number
+      unit:
+        type: string
+    required: [value,]
+  vec3Quantity:
+    type: object
+    properties:
+      value:
+        type: array
+        items:
+          type: number
+        minItems: 3
+        maxItems: 3
+      unit:
+        type: string
+    required: [value,]
