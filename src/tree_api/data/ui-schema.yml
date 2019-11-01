@@ -1,0 +1,25 @@
+name:
+  ui:widget: textarea
+  ui:autofocus: true
+visible:
+  ui:icon: "https://img.icons8.com/ios/50/000000/visible.png"
+color:
+  ui:widget: colorpicker
+opacity:
+  ui:widget: range
+transformation:
+  rotation:
+    value:
+      ui:widget: field
+    unit:
+      ui:widget: field
+  translation:
+    ui:widget: quantity3
+parameters:
+  radius:
+    ui:widget: quantity
+  height:
+    ui:widget: quantity
+  centered:
+    ui:widget: radio
+

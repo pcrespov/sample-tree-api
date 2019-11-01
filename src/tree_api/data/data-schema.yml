@@ -3,11 +3,13 @@ $schema: "http://json-schema.org/draft-07/schema#"
 title: "Selected Entity Properties"
 description: "A form for entities"
 type: object
+required: [name, ]
 properties:
   name:
     type: string
   visible:
     type: boolean
+    default: true
   color:
     $ref: "#definitions/colorRGB"
   opacity:
@@ -15,6 +17,7 @@ properties:
     minimum: 0
     maximum: 100
   transformation:
+    title: Transformation
     type: object
     properties:
       rotation:
@@ -23,6 +26,7 @@ properties:
         $ref: "#definitions/vec3Quantity"
   parameters:
     type: object
+    title: Parameters
     properties:
       radius:
         $ref: "#definitions/realQuantity"

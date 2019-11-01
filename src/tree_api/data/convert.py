@@ -1,11 +1,12 @@
 import collections
 import json
 from pathlib import Path
+from typing import Dict, Optional
 
 import fastjsonschema
-import jsonschema
 import yaml
 
+## import jsonschema
 
 def load_compact_schema(schema_path):
     # loads
@@ -33,17 +34,24 @@ def load_compact_schema(schema_path):
     return resolved
 
 
+def tojson(fpath: Path, data: Optional[Dict]=None):
+    if data is None:
+        with fpath.open() as fh:
+            data = yaml.safe_load(fh)
+    with fpath.with_suffix(".json").open("wt") as fh:
+        json.dump(data, fh, indent=2)
+
+
 def main():
 
+    # data schema
     schema_path = Path("data-schema.yml").resolve()
     schema = load_compact_schema(schema_path)
 
-    with schema_path.with_suffix(".json").open("wt") as fh:
-        json.dump(schema, fh, indent=2)
+    tojson(schema_path, schema)
 
     with schema_path.with_suffix(".py").open("wt") as fh:
         fh.write(fastjsonschema.compile_to_code(schema))
-
 
     # data
     data_path = Path("form-data.yml").resolve()
@@ -54,8 +62,12 @@ def main():
     validate(data)
     # jsonschema.validate(data, schema)
 
-    with data_path.with_suffix(".json").open("wt") as fh:
-        json.dump(data, fh, indent=2)
+    tojson(data_path, data)
+
+    # ui-schema
+    ui_path = Path("ui-schema.yml").resolve()
+    tojson(ui_path)
+
 
 
 if __name__ == "__main__":

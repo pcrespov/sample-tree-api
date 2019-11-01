@@ -1,0 +1,16 @@
+#!/bin/bash
+
+SRC_DIR=$(cd "${PWD}/../"; pwd)
+BUILD_DIR=${SRC_DIR}-build
+BUILD_BIN_DIR=${BUILD_DIR}/_bin
+
+# lib environs
+export LD_LIBRARY_PATH=${BUILD_BIN_DIR}
+export PYTHONPATH=${BUILD_BIN_DIR}
+
+export PYTHONSTARTUP=/tmp/init.py
+echo "from pysmash.application import run_application" > ${PYTHONSTARTUP}
+echo "app = run_application(force_standalone=True)" >> ${PYTHONSTARTUP}
+
+# TODO: Add a program to execute upon python3 startup
+${SRC_DIR}/.venv/bin/python3 -i

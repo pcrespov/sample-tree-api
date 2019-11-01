@@ -69,3 +69,4 @@ docs/_build
 src/tree_api/data/data-schema.json
 src/tree_api/data/data-schema.py
 src/tree_api/data/form-data.json
+src/tree_api/data/ui-schema.json

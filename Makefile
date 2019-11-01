@@ -23,6 +23,10 @@ up-devel: devenv ## starts server in development mode
 tests: devenv ## run unit tests
 	@.venv/bin/pytest -vv tests
 
+.PHONY: shell
+shell: ## s4l sell
+	@/bin/bash scripts/python3-shell
+
 
 .PHONY: clean
 clean: .check-clean ## cleans unversioned and ignored files
@@ -37,3 +41,4 @@ clean: .check-clean ## cleans unversioned and ignored files
 .PHONY: help
 help: ## this colorful help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+

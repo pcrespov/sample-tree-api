@@ -3,3 +3,6 @@ aiohttp-swagger   # Swagger API Documentation builder for aiohttp server.
 faker
 treelib
 click
+
+fastjsonschema
+pyyaml
