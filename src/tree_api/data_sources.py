@@ -101,8 +101,6 @@ def create_sample_tree():
 
 
 def create_tree_from_model(app: web.Application, smash_file: Path) -> Tree:
-  import pdb; pdb.set_trace()
-
   from pysmash.application import get_app_safe
   from XCoreModeling import GetActiveModel, IsEntityGroup
 
@@ -111,18 +109,20 @@ def create_tree_from_model(app: web.Application, smash_file: Path) -> Tree:
   kernel.OpenFiles([str(smash_file), ])
 
   tree = Tree()
+  tree.name = os.path.basename(smash_file)
 
-  def _build_tree(entity, parent=None):
-    node = tree.create_node(
-      entity.Name, identifier=entity.Id, parent=parent)
+  def _build_tree(entity, parent_id=None):
+    node = tree.create_node(entity.Name, identifier=str(entity.Id), parent=parent_id)
     node.entity = entity  # TODO:  check python weakptr
 
     if IsEntityGroup(entity):
       for child in entity.Entities:
-        _build_tree(child, parent=node.identifier)
+        _build_tree(child, parent_id=node.identifier)
 
   model = GetActiveModel()
   _build_tree(model.RootGroup)
+
+  log.debug(tree)
 
   return tree
 

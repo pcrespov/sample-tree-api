@@ -1,5 +1,18 @@
+#
+#
+#
+
 .DEFAULT_GOAL := help
 DEFAULT_PORT  ?= 8081
+
+# SRC_DIR=$(cd "${PWD}/../../group-crespo/supermash"; pwd)
+SRC_DIR=/home/crespo/devp/group-crespo/supermash
+BUILD_DIR=${SRC_DIR}-build
+BUILD_BIN_DIR=${BUILD_DIR}/_bin
+
+# lib environs
+export LD_LIBRARY_PATH=${BUILD_BIN_DIR}
+export PYTHONPATH=${BUILD_BIN_DIR}
 
 .venv:
 	# creating virtual environment
@@ -24,8 +37,8 @@ tests: devenv ## run unit tests
 	@.venv/bin/pytest -vv tests
 
 .PHONY: shell
-shell: ## s4l sell
-	@/bin/bash scripts/python3-shell
+shell: ## python shell
+	@.venv/bin/python3
 
 
 .PHONY: clean
