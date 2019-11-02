@@ -9,6 +9,7 @@ from aiohttp_swagger import setup_swagger
 from . import package_name
 from .data_sources import setup_data
 from .handlers import routes
+from .kernel import setup_kernel
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ def main(port, log_level):
   app = web.Application()
   app.add_routes(routes)
 
-
+  setup_kernel(app)
   setup_data(app)
   setup_swagger(app,
           swagger_from_file=pkg_resources.resource_filename(package_name, 'openapi.yml'),
