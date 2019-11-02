@@ -1,6 +1,7 @@
 #!/bin/bash
 
-SRC_DIR=$(cd "${PWD}/../"; pwd)
+# SRC_DIR=$(cd "${PWD}/../../group-crespo/supermash"; pwd)
+SRC_DIR=/home/crespo/devp/group-crespo/supermash
 BUILD_DIR=${SRC_DIR}-build
 BUILD_BIN_DIR=${BUILD_DIR}/_bin
 
@@ -13,4 +14,7 @@ echo "from pysmash.application import run_application" > ${PYTHONSTARTUP}
 echo "app = run_application(force_standalone=True)" >> ${PYTHONSTARTUP}
 
 # TODO: Add a program to execute upon python3 startup
-${SRC_DIR}/.venv/bin/python3 -i
+${SRC_DIR}/.venv/bin/python3 -i $@
+
+# FIXME:
+# ./scripts/python3-shell: line 17: 26689 Segmentation fault      (core dumped) ${SRC_DIR}/.venv/bin/python3 -i $@
