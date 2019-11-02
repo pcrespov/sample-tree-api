@@ -1,61 +1,13 @@
-from typing import Dict
 
 import yaml
 from aiohttp import web
 from yarl import URL
 
-from .data_sources import DATA_NAMESPACE, Node, Tree
-
+from .data_sources import Node
+from .utils import get_attributes, get_metadata, get_tree
 
 routes = web.RouteTableDef()
 
-
-def _get_node_url(identifier: str, request: web.Request) -> str:
-  base = request.url.origin()
-  url = URL.join(base, request.app.router['get_node'].url_for(node_id=identifier))
-  return str(url)
-
-def _get_tree(request: web.Request):
-  # FIXME: check header!!!
-  # FIXME: load this specific tree!?
-  # FIXME: format?
-  tree_id = request.query.get('host')
-
-  # FIXME: should load tree specified in host!
-  tree = request.app[f"{DATA_NAMESPACE}.tree"]
-  return tree
-
-def _get_node_meta(node: Node, tree: Tree, *, \
-    include_count=True,
-    include_attrs=False,
-    include_depth=True) -> Dict:
-  data = {
-    'id': node.identifier,
-    'tag': node.tag
-  }
-  if include_count:
-    data['childrenCount'] = len( tree.children(node.identifier) or [] )
-
-  if include_depth:
-    data['depth'] = tree.depth(node)
-
-  if include_attrs:
-    data.update(_get_node_attributes(node))
-
-
-  return data
-
-def _get_node_attributes(node: Node) -> Dict:
-  # TODO: move to node.data! payload
-
-  # FIXME: add upon creation instead
-  num = ord(node.identifier.split('-')[0][-1])
-  data = {
-    'expanded': node.expanded,
-    'checked': bool(num % 3 ),  # getattr(node, 'checked', False),
-    'locked':  bool(num % 2 )   #getattr(node, 'locked', False)
-  }
-  return data
 
 def _create_hrefs(request, *, root=None, owner=None, parent=None, data=None, attributes=None, nodes=False, home=False, self_override: Node=None):
   base = request.url.origin()
@@ -110,7 +62,7 @@ def _get_collection_page(nodes_iterable, marker, limit):
 
 @routes.get("/", name='get_home')
 async def get_home(request: web.Request):
-  tree = _get_tree(request)
+  tree = get_tree(request)
 
   data = {
     'name': tree.name,
@@ -123,7 +75,7 @@ async def get_home(request: web.Request):
 
 @routes.get("/nodes", name='get_nodes')
 async def get_nodes(request: web.Request):
-  tree = _get_tree(request)
+  tree = get_tree(request)
 
   # filter
   limit = int(request.query.get('limit', tree.preferences['maxItemsPerPage']))
@@ -132,14 +84,14 @@ async def get_nodes(request: web.Request):
 
   data = {
     'nodesCount': tree.size(),
-    'nodes': [ _get_node_meta(n, tree, include_count=False) for n in nodes],
+    'nodes': [ get_metadata(n, tree, include_count=False) for n in nodes],
     'hrefs': _create_hrefs(request, root=tree.root, home=True)
   }
   return web.json_response(data)
 
 @routes.get("/nodes/{node_id}", name='get_node')
 async def get_node(request: web.Request):
-  tree = _get_tree(request)
+  tree = get_tree(request)
 
   node_id = request.match_info['node_id']
 
@@ -151,7 +103,7 @@ async def get_node(request: web.Request):
   # NOTE: Upon request of OM, all children folder shall have *the same* layout! I personally do not like this.
   def _build_data(anode: Node, include_children: bool):
     # NOTE: 'tree' and 'children' are taken from the outer context
-    adata = _get_node_meta(anode, tree, include_attrs=True)
+    adata = get_metadata(anode, tree, include_attrs=True)
 
     if include_children:
       adata['children'] = [ _build_data(child, False)
@@ -172,24 +124,22 @@ async def get_node(request: web.Request):
 
   return web.json_response(data)
 
-
 @routes.get("/nodes/{node_id}/attributes", name='get_node_attributes')
 async def get_node_attributes(request: web.Request):
-  tree = _get_tree(request)
+  tree = get_tree(request)
 
   node_id = request.match_info['node_id']
   node = tree[node_id]
-  data = _get_node_attributes(node)
+  data = get_attributes(node)
 
   data['hrefs'] = _create_hrefs(request,
     owner=node_id)
 
   return web.json_response(data)
 
-
 @routes.get("/nodes/{node_id}/data", name='get_node_data')
 async def get_node_data(request: web.Request):
-  tree = _get_tree(request)
+  tree = get_tree(request)
   node_id = request.match_info['node_id']
 
   data ={}
