@@ -1,14 +1,21 @@
 {
-  "name": "Red Cylinder",
-  "visible": true,
-  "color": [
+  "Name": "Red Cylinder",
+  "Visible": true,
+  "Color": [
     248,
     6,
     143
   ],
-  "opacity": 100,
-  "transformation": {
-    "rotation": {
+  "Opacity": 100,
+  "Transformation": {
+    "Scaling": {
+      "value": [
+        1,
+        1,
+        1
+      ]
+    },
+    "Rotation": {
       "value": [
         0,
         0,
@@ -16,7 +23,7 @@
       ],
       "unit": "deg"
     },
-    "translation": {
+    "Translation": {
       "value": [
         100,
         0,
@@ -25,16 +32,16 @@
       "unit": "mm"
     }
   },
-  "parameters": {
-    "radius": {
+  "Parameters": {
+    "Radius": {
       "value": 19.1055,
       "unit": "mm"
     },
-    "height": {
+    "Height": {
       "value": 43,
       "unit": "mm"
     },
-    "centered": false
+    "Centered": false
   },
-  "materials": []
+  "Materials": []
 }

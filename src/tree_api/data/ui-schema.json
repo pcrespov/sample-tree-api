@@ -1,19 +1,22 @@
 {
-  "name": {
+  "Name": {
     "ui:widget": "textarea",
     "ui:autofocus": true
   },
-  "visible": {
+  "Visible": {
     "ui:icon": "https://img.icons8.com/ios/50/000000/visible.png"
   },
-  "color": {
+  "Color": {
     "ui:widget": "colorpicker"
   },
-  "opacity": {
+  "Opacity": {
     "ui:widget": "range"
   },
-  "transformation": {
-    "rotation": {
+  "Transformation": {
+    "Scaling": {
+      "ui:widget": "quantity3"
+    },
+    "Rotation": {
       "value": {
         "ui:widget": "field"
       },
@@ -21,18 +24,18 @@
         "ui:widget": "field"
       }
     },
-    "translation": {
+    "Translation": {
       "ui:widget": "quantity3"
     }
   },
-  "parameters": {
-    "radius": {
+  "Parameters": {
+    "Radius": {
       "ui:widget": "quantity"
     },
-    "height": {
+    "Height": {
       "ui:widget": "quantity"
     },
-    "centered": {
+    "Centered": {
       "ui:widget": "radio"
     }
   }

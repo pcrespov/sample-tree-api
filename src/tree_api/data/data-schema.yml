@@ -3,39 +3,39 @@ $schema: "http://json-schema.org/draft-07/schema#"
 title: "Selected Entity Properties"
 description: "A form for entities"
 type: object
-required: [name, ]
+required: [Name, ]
 properties:
-  name:
+  Name:
     type: string
-  visible:
+  Visible:
     type: boolean
     default: true
-  color:
+  Color:
     $ref: "#definitions/colorRGB"
-  opacity:
+  Opacity:
     type: number
     minimum: 0
     maximum: 100
-  transformation:
-    title: Transformation
+  Transformation:
     type: object
     properties:
-      rotation:
+      Scaling:
         $ref: "#definitions/vec3Quantity"
-      translation:
+      Rotation:
         $ref: "#definitions/vec3Quantity"
-  parameters:
+      Translation:
+        $ref: "#definitions/vec3Quantity"
+  Parameters:
     type: object
-    title: Parameters
     properties:
-      radius:
+      Radius:
         $ref: "#definitions/realQuantity"
-      height:
+      Height:
         $ref: "#definitions/realQuantity"
-      centered:
+      Centered:
         type: boolean
         default: false
-  materials:
+  Materials:
     type: array
     items:
         type: string
@@ -56,6 +56,7 @@ definitions:
         type: number
       unit:
         type: string
+        default: null
     required: [value,]
   vec3Quantity:
     type: object
@@ -68,4 +69,5 @@ definitions:
         maxItems: 3
       unit:
         type: string
+        default: null
     required: [value,]

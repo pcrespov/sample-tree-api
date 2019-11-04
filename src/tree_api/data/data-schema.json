@@ -5,17 +5,17 @@
   "description": "A form for entities",
   "type": "object",
   "required": [
-    "name"
+    "Name"
   ],
   "properties": {
-    "name": {
+    "Name": {
       "type": "string"
     },
-    "visible": {
+    "Visible": {
       "type": "boolean",
       "default": true
     },
-    "color": {
+    "Color": {
       "type": "array",
       "items": {
         "type": "integer",
@@ -25,16 +25,15 @@
       "minItems": 3,
       "maxItems": 3
     },
-    "opacity": {
+    "Opacity": {
       "type": "number",
       "minimum": 0,
       "maximum": 100
     },
-    "transformation": {
-      "title": "Transformation",
+    "Transformation": {
       "type": "object",
       "properties": {
-        "rotation": {
+        "Scaling": {
           "type": "object",
           "properties": {
             "value": {
@@ -46,14 +45,15 @@
               "maxItems": 3
             },
             "unit": {
-              "type": "string"
+              "type": "string",
+              "default": null
             }
           },
           "required": [
             "value"
           ]
         },
-        "translation": {
+        "Rotation": {
           "type": "object",
           "properties": {
             "value": {
@@ -65,7 +65,28 @@
               "maxItems": 3
             },
             "unit": {
-              "type": "string"
+              "type": "string",
+              "default": null
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        "Translation": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "unit": {
+              "type": "string",
+              "default": null
             }
           },
           "required": [
@@ -74,45 +95,46 @@
         }
       }
     },
-    "parameters": {
+    "Parameters": {
       "type": "object",
-      "title": "Parameters",
       "properties": {
-        "radius": {
+        "Radius": {
           "type": "object",
           "properties": {
             "value": {
               "type": "number"
             },
             "unit": {
-              "type": "string"
+              "type": "string",
+              "default": null
             }
           },
           "required": [
             "value"
           ]
         },
-        "height": {
+        "Height": {
           "type": "object",
           "properties": {
             "value": {
               "type": "number"
             },
             "unit": {
-              "type": "string"
+              "type": "string",
+              "default": null
             }
           },
           "required": [
             "value"
           ]
         },
-        "centered": {
+        "Centered": {
           "type": "boolean",
           "default": false
         }
       }
     },
-    "materials": {
+    "Materials": {
       "type": "array",
       "items": {
         "type": "string"
