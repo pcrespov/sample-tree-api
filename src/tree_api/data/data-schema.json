@@ -1,0 +1,122 @@
+{
+  "$id": "https://osparc.io/schemas/data-schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Selected Entity Properties",
+  "description": "A form for entities",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "visible": {
+      "type": "boolean",
+      "default": true
+    },
+    "color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 256
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "opacity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "transformation": {
+      "title": "Transformation",
+      "type": "object",
+      "properties": {
+        "rotation": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        "translation": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "title": "Parameters",
+      "properties": {
+        "radius": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        "height": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        "centered": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
