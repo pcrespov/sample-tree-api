@@ -1,8 +1,22 @@
+""" Special nodes to bind s4l properties defining data
+
+"""
+
+import sys
+from io import StringIO
+
 import fastjsonschema
-from treelib import Node
+from treelib import Node, Tree
 
-from XCore import PropertyReal
+from XCore import PropertyReal, XObject
+from XCoreModeling import Entity, EntityProperties
 
+_registry = set()
+
+def register(cls):
+  assert issubclass(cls, Node)
+  _registry.add(cls)
+  return cls
 
 # >>> print(brick.Properties.DumpTree())
 # Block 1                                           <class 'XCoreModeling.EntityProperties'>
@@ -24,13 +38,12 @@ from XCore import PropertyReal
 #
 
 
-
-
 class PropertyNode(Node):
-  def __init__(self, xobj):
-    super(PropertyNode).__init__(self)
+  def __init__(self, xobj, order):
+    super().__init__(tag=xobj.Name, identifier=xobj.Name)
     assert self.test(xobj), f"{self.__class__.__name__} does not pass test for {xobj}"
 
+    self.order = order
     self._p = xobj
     self.validate = None
 
@@ -44,9 +57,26 @@ class PropertyNode(Node):
   @classmethod
   def test(cls, xobj):
     """ True if xobj matches bind criteria"""
+    return xobj is not None
 
 
+@register
+class GroupNode(PropertyNode):
+  @classmethod
+  def test(cls, xobj):
+    return isinstance(xobj, EntityProperties) or \
+      (isinstance(xobj, XObject) and xobj.Size>0)
 
+  def to_schema(self):
+    schema = PropertyNode.to_schema(self)
+    schema.update({
+      'type': 'object',
+      'properties': {}
+    })
+    return schema
+
+
+@register
 class RealQuantityNode(PropertyNode):
   @classmethod
   def test(cls, xobj):
@@ -71,7 +101,7 @@ class RealQuantityNode(PropertyNode):
     })
 
     # TODO: Creates validator on the fly
-    # self.validate = fastjsonschema.compile(schema)
+    self.validate = fastjsonschema.compile(schema)
 
     # TODO: cache??
     # TODO: meta-validator or generated
@@ -106,13 +136,42 @@ class RealQuantityNode(PropertyNode):
     pass
 
 
-_registry = [RealQuantityNode, ]
+# -------------------------------
 
-
-def find(obj):
+def find_node_cls(obj):
   try:
-    node = next(b for b in _registry if b.test(obj) )
+    node_cls = next(cls for cls in _registry if cls.test(obj) )
   except StopIteration:
-    return None
+    return PropertyNode
   else:
-    return node
+    return node_cls
+
+def create_data_tree(entity: Entity) -> Tree:
+  tree = Tree()
+
+  def create_node(obj: XObject, parent_id: str, order: int):
+    node_cls = find_node_cls(obj)
+    if node_cls:
+      node = node_cls(obj, order)
+      tree.add_node(node, parent=parent_id)
+
+    # XObject interface
+      if obj.Size >0:
+        for i, child in enumerate(obj.Children):
+          create_node(child, node.identifier, i)
+
+  prop = entity.Properties
+  create_node(prop, None, order=0)
+
+  return tree
+
+def get_tree_as_string(tree: Tree) -> str:
+  keep = sys.stdout
+  msg = ""
+  try:
+    sys.stdout = StringIO()
+    tree.show(key=lambda n: n.order)
+    msg = sys.stdout.getvalue().strip()
+  finally:
+    sys.stdout = keep
+  return msg
