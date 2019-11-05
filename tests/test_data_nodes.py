@@ -2,17 +2,21 @@
 # pylint:disable=unused-variable
 # pylint:disable=unused-argument
 # pylint:disable=redefined-outer-name
-import pytest
-from pysmash.application import managed_application
-
-from tree_api.data_nodes import create_data_tree, get_tree_as_string
-from XCoreModeling import (CreateSolidBlock, Entity, GetActiveModel,
-                           Vec3)
-
+import json
 import logging
+from textwrap import dedent
+
+import pytest
+
+from pysmash.application import managed_application
+from tree_api.data_nodes import create_data_tree, tree_to_schema, tree_to_uischema, tree_to_data
+from XCoreModeling import CreateSolidBlock, Entity, GetActiveModel, Vec3
+from treelib import Tree
+
 
 logging.basicConfig(level=logging.DEBUG)
 
+# FIXTURES ####
 
 @pytest.fixture(scope="session")
 def s4l_kernel():
@@ -33,9 +37,24 @@ def entity(s4l_modeler):
   yield e
   e.Delete()
 
+# HELPERS ####
 
-from textwrap import dedent
+def _get_tree_as_string(tree: Tree) -> str:
+  import sys
+  from io import StringIO
 
+  keep = sys.stdout
+  msg = ""
+  try:
+    sys.stdout = StringIO()
+    tree.show(key=lambda n: n.order)
+    msg = sys.stdout.getvalue().strip()
+  finally:
+    sys.stdout = keep
+  return msg
+
+
+# TESTS ####
 
 def test_prop_to_data(entity):
   # convert Entity.Properties into
@@ -61,15 +80,15 @@ def test_prop_to_data(entity):
   └── Material
       └── Assign
   """)
-  got = get_tree_as_string(data_tree)
+  got = _get_tree_as_string(data_tree)
   assert  got.strip()== expected.strip()
 
+  data_schema = tree_to_schema(data_tree)
+  print(json.dumps(data_schema, indent=2))
 
+  data_uischema = tree_to_uischema(data_tree)
+  print(json.dumps(data_uischema, indent=2))
 
-  # Use only the interface of
+  data_data = tree_to_data(data_tree)
+  print(json.dumps(data_data, indent=2))
 
-  # data
-
-  # ui-schema
-
-#

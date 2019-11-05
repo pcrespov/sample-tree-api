@@ -1,9 +1,7 @@
 """ Special nodes to bind s4l properties defining data
 
 """
-
-import sys
-from io import StringIO
+from typing import Dict, List
 
 import fastjsonschema
 from treelib import Node, Tree
@@ -47,12 +45,40 @@ class PropertyNode(Node):
     self._p = xobj
     self.validate = None
 
+  def getattr(self, attrname):
+    if hasattr(self._p, attrname):
+      return getattr(self._p, attrname)
+    return None
+
   def to_schema(self):
+    # TODO: alternatives are really verbose. add as option
     return {
-      'title': self._p.Description or "",
-      'description': self._p.ToolTip or "",
-      'readOnly': self._p.ReadOnly,
+      'title': self.getattr("Description") or "",
+      'description': self.getattr("ToolTip") or "",
+      'readOnly': self.getattr("ReadOnly") or False,
     }
+
+  def to_uischema(self):
+    ui_schema = {
+      "ui:icon": self.getattr("Icon")
+    }
+    return ui_schema
+
+  def to_data(self):
+    return {}
+
+  def from_schema(self, branch):
+    # TODO: validate json schema?? Meta-validator?
+    # check if changes with previous schema
+    # update prop
+    #
+    pass
+
+  def from_data(self, branch):
+    pass
+
+  def from_uischema(self, branch):
+    pass
 
   @classmethod
   def test(cls, xobj):
@@ -83,7 +109,7 @@ class RealQuantityNode(PropertyNode):
     return isinstance(xobj, PropertyReal)
 
   def to_schema(self):
-    schema = PropertyNode.to_schema(self)
+    schema = super().to_schema()
     schema.update({
       'type': 'object',
       'properties': {
@@ -108,37 +134,26 @@ class RealQuantityNode(PropertyNode):
     # TODO: compile data-validator?
     return schema
 
-  def from_schema(self, branch):
-    # TODO: validate json schema?? Meta-validator?
-    # check if changes with previous schema
-    # update prop
-    #
-    pass
-
   def to_data(self):
-    data = {
+    data = super().to_data()
+    data.update({
       'value': self._p.Value,
       'unit': str(self._p.Unit) # TODO: do not transmit if None
-    }
+    })
     # TODO: call schema validator?
     return data
 
-  def from_data(self, branch):
-    pass
-
   def to_uischema(self):
-    ui_schema = {
+    ui_schema = super().to_uischema()
+    ui_schema.update({
       "ui:widget": "quantity3"
-    }
+    })
     return ui_schema
 
-  def from_uischema(self, branch):
-    pass
 
+# Helpers -------------------------------
 
-# -------------------------------
-
-def find_node_cls(obj):
+def find_node_cls(obj: XObject) -> PropertyNode:
   try:
     node_cls = next(cls for cls in _registry if cls.test(obj) )
   except StopIteration:
@@ -165,13 +180,48 @@ def create_data_tree(entity: Entity) -> Tree:
 
   return tree
 
-def get_tree_as_string(tree: Tree) -> str:
-  keep = sys.stdout
-  msg = ""
-  try:
-    sys.stdout = StringIO()
-    tree.show(key=lambda n: n.order)
-    msg = sys.stdout.getvalue().strip()
-  finally:
-    sys.stdout = keep
-  return msg
+
+def tree_to_schema(tree: Tree):
+  def children(node):
+    for nid in node.fpointer:
+      yield tree[nid]
+
+  def to_schema(node):
+    ntag = node.tag
+    nschema = node.to_schema()
+    for child in children(node):
+      nschema['properties'].update( to_schema(child) )
+    return { ntag: nschema }
+
+  schema = to_schema(tree[tree.root])
+  return schema
+
+def tree_to_uischema(tree: Tree):
+  def children(node: Node) -> List[Node]:
+    for nid in node.fpointer:
+      yield tree[nid]
+
+  def to_uischema(node: Node) -> Dict:
+    ntag = node.tag
+    nschema = node.to_uischema()
+    for child in children(node):
+      nschema.update( to_uischema(child) )
+    return { ntag: nschema }
+
+  schema = to_uischema(tree[tree.root])
+  return schema
+
+def tree_to_data(tree: Tree):
+  def children(node: Node) -> List[Node]:
+    for nid in node.fpointer:
+      yield tree[nid]
+
+  def to_data(node: Node) -> Dict:
+    ntag = node.tag
+    ndata = node.to_data()
+    for child in children(node):
+      ndata.update( to_data(child) )
+    return { ntag: ndata }
+
+  data = to_data(tree[tree.root])
+  return data
