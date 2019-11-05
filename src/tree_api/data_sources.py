@@ -132,7 +132,10 @@ def setup_data(app: web.Application):
   log.debug("building sample tree")
 
   ## tree = create_large_tree(max_depth=MAX_DEPTH, max_children=MAX_CHILDREN)
-  tree = create_tree_from_model( app, os.path.expanduser("~/data/smartphone.smash"))
+
+  smash_path = os.path.expanduser("~/data/smartphone.smash")
+  smash_path = os.path.expanduser("~/data/input.smash")
+  tree = create_tree_from_model( app, smash_path)
 
   # TODO: needs to comply with openapi.Tree schema
   tree.preferences = {

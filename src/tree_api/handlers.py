@@ -101,12 +101,12 @@ async def get_node(request: web.Request):
   children = _get_collection_page(tree.children(node_id) or [], marker, limit)
 
   # NOTE: Upon request of OM, all children folder shall have *the same* layout! I personally do not like this.
-  def _build_data(anode: Node, include_children: bool):
+  def _build_body(anode: Node, include_children: bool):
     # NOTE: 'tree' and 'children' are taken from the outer context
     adata = get_metadata(anode, tree, include_attrs=True)
 
     if include_children:
-      adata['children'] = [ _build_data(child, False)
+      adata['children'] = [ _build_body(child, False)
         for child in children
       ] or None
 
@@ -120,7 +120,7 @@ async def get_node(request: web.Request):
     return adata
 
   node = tree[node_id]
-  data = _build_data(node, True)
+  data = _build_body(node, True)
 
   return web.json_response(data)
 
@@ -142,40 +142,19 @@ async def get_node_data(request: web.Request):
   tree = get_tree(request)
   node_id = request.match_info['node_id']
 
-  data ={}
+  assert node_id in tree
 
-  #TODO:  move to data.py
-  data['schema'] = yaml.safe_load("""
-  type: object
-  properties:
-    foo:
-      type: integer
-      description: 'some random integer'
-    bar:
-      type: number
-    wo:
-      type: string
-    info:
-      type: object
-      properties:
-        one:
-          type: string
-        another:
-          type: string
-          description: 'something different from one'
-  """)
+  # TODO: optimize!
+  from .kernel import find_entity
+  from .data_nodes import create_data_tree, tree_to_schema, tree_to_uischema, tree_to_data
 
+  entity = find_entity(node_id)
+  data_tree = create_data_tree(entity)
 
-  data['data'] = {
-    'foo': 3,
-    'bar': 3.14,
-    'wo': 'a',
-    'info':{
-      'one': 'foo',
-      'another': 'bar'
-    }
-  }
-
+  data = {}
+  data['schema'] = tree_to_schema(data_tree)
+  data['ui'] = tree_to_uischema(data_tree)
+  data['data'] = tree_to_data(data_tree)
   data['hrefs'] = _create_hrefs(request,
     owner=node_id)
 
