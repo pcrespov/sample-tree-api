@@ -6,7 +6,9 @@ from typing import Dict, List
 import fastjsonschema
 from treelib import Node, Tree
 
-from XCore import PropertyBool, PropertyBoolBinder, PropertyReal, XObject
+from XCore import (PropertyBool, PropertyColor, PropertyReal, PropertySlider,
+                   PropertyString, XObject)
+from XCoreMath import PropertyVec3
 from XCoreModeling import Entity, EntityProperties
 
 _registry = set()
@@ -18,10 +20,10 @@ def register(cls):
 
 # >>> print(brick.Properties.DumpTree())
 # Block 1                                           <class 'XCoreModeling.EntityProperties'>
-#     Name                                          <class 'XCore.XObject'>
+#     Name                                          <class 'XCore.PropertyStdStringBinder'>
 #     Visible                                       <class 'XCore.PropertyBoolBinder'>
-#     Color                                         <class 'XCore.XObject'>
-#     Opacity                                       <class 'XCore.XObject'>
+#     Color                                         <class 'XCore.PropertyBinderColor'>
+#     Opacity                                       <class 'XCore.PropertyBinderSlider'>
 #     Transformation                                <class 'XCore.XObject'>
 #         Scaling                                   <class 'XCoreMath.PropertyVec3'>
 #         Rotation                                  <class 'XCoreMath.PropertyVec3'>
@@ -33,7 +35,6 @@ def register(cls):
 #         Centered                                  <class 'XCore.PropertyBool'>
 #     Material                                      <class 'XCore.PropertyGroup'>
 #         Assign                                    <class 'XCore.PropertyButton'>
-#
 
 
 
@@ -61,6 +62,7 @@ class PropertyNode(Node):
       'title': self.getattr("Description"),
       'description': self.getattr("ToolTip"),
       'readOnly': self.getattr("ReadOnly") or False,
+      'type': 'unknown'
     }
     return self._prune(schema)
 
@@ -146,12 +148,68 @@ class RealQuantityNode(PropertyNode):
       'unit': str(self._prop.Unit) # TODO: do not transmit if None
     }
     # TODO: call schema validator?
-    return data
+    return self._prune(data)
 
   def to_uischema(self):
     ui_schema = super().to_uischema()
     ui_schema.update({
-      "ui:widget": "quantity"
+      "ui:widget": "range" if isinstance(self._prop, PropertySlider) else "quantity"
+    })
+    return ui_schema
+
+
+@register
+class StringNode(PropertyNode):
+  @classmethod
+  def test(cls, xobj):
+    return any(isinstance(xobj, c) for c in (PropertyString,))
+
+  def to_schema(self):
+    schema = super().to_schema()
+    schema.update({
+      'type': 'string',
+    })
+    return schema
+
+  def to_data(self):
+    return self._prop.Value
+
+  def to_uischema(self):
+    ui_schema = super().to_uischema()
+    ui_schema.update({
+      "ui:widget": "textarea"
+    })
+    return ui_schema
+
+@register
+class ColorNode(PropertyNode):
+  @classmethod
+  def test(cls, xobj):
+    return isinstance(xobj, PropertyColor)
+
+  def to_schema(self):
+    schema = super().to_schema()
+    schema.update({
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 4,
+      "maxItems": 4
+    })
+    return schema
+
+  def to_data(self):
+    # TODO: call schema validator?
+    c = self._prop.Value
+    return [c.Red, c.Green, c.Blue, 1.0]
+
+  def to_uischema(self):
+    ui_schema = super().to_uischema()
+    ui_schema.update({
+      "ui:widget": "colorpicker"
     })
     return ui_schema
 
@@ -160,7 +218,7 @@ class RealQuantityNode(PropertyNode):
 class BoolNode(PropertyNode):
   @classmethod
   def test(cls, xobj):
-    return any(isinstance(xobj, c) for c in (PropertyBoolBinder, PropertyBool))
+    return isinstance(xobj, PropertyBool)
 
   def to_schema(self):
     schema = super().to_schema()
@@ -180,7 +238,6 @@ class BoolNode(PropertyNode):
     })
     return ui_schema
 
-from XCoreMath import PropertyVec3
 
 @register
 class Vec3Node(PropertyNode):

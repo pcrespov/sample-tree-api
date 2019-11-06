@@ -138,7 +138,7 @@ def setup_data(app: web.Application, data_folder:Path):
   ## tree = create_large_tree(max_depth=MAX_DEPTH, max_children=MAX_CHILDREN)
 
   smash_paths = sorted( data_folder.glob("*.smash") )
-  tree = create_tree_from_model( app, smash_paths[0])
+  tree = create_tree_from_model( app, smash_paths[-1])
 
   # TODO: needs to comply with openapi.Tree schema
   tree.preferences = {
