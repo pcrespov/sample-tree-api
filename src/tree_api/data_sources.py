@@ -1,4 +1,3 @@
-from .kernel import APP_KERNEL_KEY
 import functools
 import logging
 import os
@@ -10,6 +9,8 @@ import attr
 from aiohttp import web
 from faker import Faker
 from treelib import Node, Tree
+
+from .kernel import APP_KERNEL_KEY
 
 fake = Faker()
 
@@ -127,15 +128,17 @@ def create_tree_from_model(app: web.Application, smash_file: Path) -> Tree:
   return tree
 
 
-def setup_data(app: web.Application):
+
+
+
+def setup_data(app: web.Application, data_folder:Path):
   #tree = create_sample_tree()
   log.debug("building sample tree")
 
   ## tree = create_large_tree(max_depth=MAX_DEPTH, max_children=MAX_CHILDREN)
 
-  smash_path = os.path.expanduser("~/data/smartphone.smash")
-  smash_path = os.path.expanduser("~/data/input.smash")
-  tree = create_tree_from_model( app, smash_path)
+  smash_paths = sorted( data_folder.glob("*.smash") )
+  tree = create_tree_from_model( app, smash_paths[0])
 
   # TODO: needs to comply with openapi.Tree schema
   tree.preferences = {
@@ -146,6 +149,7 @@ def setup_data(app: web.Application):
   log.debug("saving sample tree")
 
   app[f"{DATA_NAMESPACE}.tree"] = tree
+  app[f"{DATA_NAMESPACE}.data_folder"] = data_folder
 
 
 __all__ = [

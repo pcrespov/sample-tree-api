@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 import click
 import pkg_resources
@@ -17,7 +18,8 @@ log = logging.getLogger(__name__)
 @click.command()
 @click.option("--port", default=8080)
 @click.option("--log_level", default="DEBUG")
-def main(port, log_level):
+@click.option("--data_folder", default="~/data", type=Path) # TODO: convert to Path?
+def main(port, log_level, data_folder: Path):
 
   logging.basicConfig(level=getattr(logging,log_level))
   log.info("Starting application ...")
@@ -26,7 +28,7 @@ def main(port, log_level):
   app.add_routes(routes)
 
   setup_kernel(app)
-  setup_data(app)
+  setup_data(app, data_folder.expanduser())
   setup_swagger(app,
           swagger_from_file=pkg_resources.resource_filename(package_name, 'openapi.yml'),
           swagger_url="/doc")
