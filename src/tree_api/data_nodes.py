@@ -6,7 +6,7 @@ from typing import Dict, List
 import fastjsonschema
 from treelib import Node, Tree
 
-from XCore import PropertyReal, XObject
+from XCore import PropertyBool, PropertyBoolBinder, PropertyReal, XObject
 from XCoreModeling import Entity, EntityProperties
 
 _registry = set()
@@ -42,12 +42,12 @@ class PropertyNode(Node):
     assert self.test(xobj), f"{self.__class__.__name__} does not pass test for {xobj}"
 
     self.order = order
-    self._p = xobj
+    self._prop = xobj
     self.validate = None
 
   def getattr(self, attrname):
-    if hasattr(self._p, attrname):
-      return getattr(self._p, attrname)
+    if hasattr(self._prop, attrname):
+      return getattr(self._prop, attrname)
     return None
 
   def to_schema(self):
@@ -115,8 +115,8 @@ class RealQuantityNode(PropertyNode):
       'properties': {
             'value': {
               'type': 'number',
-              'minimum': self._p.Min,
-              'maximum': self._p.Max
+              'minimum': self._prop.Min,
+              'maximum': self._prop.Max
             },
             'unit': {
               'type': 'string',
@@ -137,8 +137,8 @@ class RealQuantityNode(PropertyNode):
   def to_data(self):
     data = super().to_data()
     data.update({
-      'value': self._p.Value,
-      'unit': str(self._p.Unit) # TODO: do not transmit if None
+      'value': self._prop.Value,
+      'unit': str(self._prop.Unit) # TODO: do not transmit if None
     })
     # TODO: call schema validator?
     return data
@@ -149,6 +149,32 @@ class RealQuantityNode(PropertyNode):
       "ui:widget": "quantity3"
     })
     return ui_schema
+
+
+@register
+class BoolNode(PropertyNode):
+  @classmethod
+  def test(cls, xobj):
+    return any(isinstance(xobj, c) for c in (PropertyBoolBinder, PropertyBool))
+
+  def to_schema(self):
+    schema = super().to_schema()
+    schema.update({
+      'type': 'boolean',
+      'default': PropertyBool().Value if isinstance(self._prop, PropertyBool) else True
+    })
+    return schema
+
+  def to_data(self):
+    return self._prop.Value
+
+  def to_uischema(self):
+    ui_schema = super().to_uischema()
+    ui_schema.update({
+      "ui:widget": "checkbox"
+    })
+    return ui_schema
+
 
 
 # Helpers -------------------------------

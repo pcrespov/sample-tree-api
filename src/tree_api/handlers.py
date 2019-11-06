@@ -1,5 +1,4 @@
 
-import yaml
 from aiohttp import web
 from yarl import URL
 
