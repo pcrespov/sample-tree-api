@@ -135,18 +135,17 @@ class RealQuantityNode(PropertyNode):
     return schema
 
   def to_data(self):
-    data = super().to_data()
-    data.update({
+    data = {
       'value': self._prop.Value,
       'unit': str(self._prop.Unit) # TODO: do not transmit if None
-    })
+    }
     # TODO: call schema validator?
     return data
 
   def to_uischema(self):
     ui_schema = super().to_uischema()
     ui_schema.update({
-      "ui:widget": "quantity3"
+      "ui:widget": "quantity"
     })
     return ui_schema
 
@@ -175,6 +174,52 @@ class BoolNode(PropertyNode):
     })
     return ui_schema
 
+from XCoreMath import PropertyVec3
+
+@register
+class Vec3Node(PropertyNode):
+  @classmethod
+  def test(cls, xobj):
+    return isinstance(xobj, PropertyVec3)
+
+  def to_schema(self):
+    schema = super().to_schema()
+    schema.update({
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "unit": {
+          "type": "string",
+          "default": None
+        }
+      },
+      "required": [
+        "value"
+      ]
+    })
+    return schema
+
+  def to_data(self):
+    data = {
+      'value': list(self._prop.Value),
+      'unit': str(self._prop.Unit) # TODO: do not transmit if None
+    }
+    # TODO: call schema validator?
+    return data
+
+  def to_uischema(self):
+    ui_schema = super().to_uischema()
+    ui_schema.update({
+      "ui:widget": "quantity3"
+    })
+    return ui_schema
 
 
 # Helpers -------------------------------

@@ -34,7 +34,7 @@ up-devel: devenv ## starts server in development mode
 
 .PHONY: tests
 tests: devenv ## run unit tests
-	@.venv/bin/pytest -vv -x --pdb tests/test_data_nodes.py
+	@.venv/bin/pytest -vv -x -s --pdb tests/test_data_nodes.py
 
 .PHONY: shell
 shell: ## python shell
