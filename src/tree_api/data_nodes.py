@@ -36,6 +36,7 @@ def register(cls):
 #
 
 
+
 class PropertyNode(Node):
   def __init__(self, xobj, order):
     super().__init__(tag=xobj.Name, identifier=xobj.Name)
@@ -50,19 +51,24 @@ class PropertyNode(Node):
       return getattr(self._prop, attrname)
     return None
 
+  @classmethod
+  def _prune(cls, data: Dict):
+    return { key:value for key, value in data.items() if value not in [None, ""]}
+
   def to_schema(self):
     # TODO: alternatives are really verbose. add as option
-    return {
-      'title': self.getattr("Description") or "",
-      'description': self.getattr("ToolTip") or "",
+    schema = {
+      'title': self.getattr("Description"),
+      'description': self.getattr("ToolTip"),
       'readOnly': self.getattr("ReadOnly") or False,
     }
+    return self._prune(schema)
 
   def to_uischema(self):
     ui_schema = {
       "ui:icon": self.getattr("Icon")
     }
-    return ui_schema
+    return self._prune(ui_schema)
 
   def to_data(self):
     return {}
