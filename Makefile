@@ -69,12 +69,23 @@ build: docker-compose.yml
 
 
 .PHONY: info
-info:
+info: ## info
 	@echo "APP_NAME    = ${APP_NAME}"
 	@echo "APP_VERSION = ${APP_VERSION}"
-	## docker inspect -f "{{json .Config.Labels }}" ${DOCKER_IMAGE_NAME}
 	docker image inspect ${DOCKER_IMAGE_NAME} | jq .[0].Config.Labels
 
+## docker inspect -f "{{json .Config.Labels }}" ${DOCKER_IMAGE_NAME}
+
+
+.PHONY: patch major minor
+patch: ## bug fixes not affecting the API
+	bump2version --verbose --list patch
+
+minor: ## backwards-compatible API addition or changes
+	bump2version --verbose --list minor
+
+major: ## backwards-INcompatible API changes
+	bump2version --verbose --list major
 
 
 .PHONY: clean
