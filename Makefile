@@ -21,26 +21,32 @@ SRC_DIR=$(abspath ${HOME}/devp/group-crespo/supermash)
 BUILD_DIR=${SRC_DIR}-build
 BUILD_BIN_DIR=${BUILD_DIR}/_bin
 
+
+# CREATING DEVEL ENVIRON ---------------
+
 .venv:
 	# creating virtual environment
 	@python3 -m venv .venv
 	@.venv/bin/pip --no-cache install -U pip setuptools wheel
 
-
-.PHONY: devenv
-devenv: src/simcore_service_tree.egg-info ## builds development environment
-	# extra tools
-	@.venv/bin/pip --no-cache install \
-		bump2version \
-		pip-tools
-
-src/simcore_service_tree.egg-info: .venv
+src/simcore_service_tree.egg-info: requirements/_test.txt requirements/_base.txt
 	# installing dependencies
-	@.venv/bin/pip install -r requirements/_test.txt
+	@.venv/bin/pip install -r $<
 	# installing in edit mode
 	@.venv/bin/pip install -e .
 
 
+.PHONY: devenv
+devenv: .venv src/simcore_service_tree.egg-info ## builds development environment
+	# extra tools
+	@.venv/bin/pip --no-cache install \
+		bump2version \
+		pip-tools
+	# installed packages
+	@.venv/bin/pip list
+
+
+# RUNNING IN DEVEL ENVIRON ---------------
 
 # lib environs for py-smash
 export LD_LIBRARY_PATH=${BUILD_BIN_DIR}
@@ -55,10 +61,9 @@ up-devel: devenv ## starts server in development mode
 tests: devenv ## run unit tests
 	@.venv/bin/pytest -vv -x -s --pdb tests/test_data_nodes.py
 
-.PHONY: shell
-shell: ## python shell
-	@.venv/bin/python3
 
+
+# DOCKER ---------------
 
 .PHONY: build
 build: docker-compose.yml
