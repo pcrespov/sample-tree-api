@@ -77,17 +77,6 @@ info: ## info
 ## docker inspect -f "{{json .Config.Labels }}" ${DOCKER_IMAGE_NAME}
 
 
-.PHONY: patch major minor
-patch: ## bug fixes not affecting the API
-	bump2version --verbose --list patch
-
-minor: ## backwards-compatible API addition or changes
-	bump2version --verbose --list minor
-
-major: ## backwards-INcompatible API changes
-	bump2version --verbose --list major
-
-
 .PHONY: clean
 clean: .check-clean ## cleans unversioned and ignored files
 	# remove unversioned
@@ -102,3 +91,18 @@ clean: .check-clean ## cleans unversioned and ignored files
 help: ## this colorful help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+
+# VERSIONING -----
+
+.PHONY: patch major minor
+patch: ## bug fixes not affecting the API
+	bump2version --verbose --list patch
+	@git log -1 --pretty
+
+minor: ## backwards-compatible API addition or changes
+	bump2version --verbose --list minor
+	@git log -1 --pretty
+
+major: ## backwards-INcompatible API changes
+	bump2version --verbose --list major
+	@git log -1 --pretty
