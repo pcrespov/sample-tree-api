@@ -1,10 +1,7 @@
 #
 #
 #
-
 .DEFAULT_GOAL := help
-DEFAULT_PORT  ?= 8081
-
 
 export APP_NAME=tree-api
 export APP_VERSION=$(shell cat VERSION)
@@ -15,18 +12,14 @@ export BUILD_DATE:=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export VCS_URL:=$(shell git config --get remote.origin.url)
 export VCS_REF:=$(shell git rev-parse HEAD)
 
-# TODO cannot build if dirty
+# TODO: cannot build if dirty
 export VCS_IS_DIRTY=$(shell git status -s)
 
 
-# SRC_DIR=$(cd "${PWD}/../../group-crespo/supermash"; pwd)
-SRC_DIR=/home/crespo/devp/group-crespo/supermash
+# TODO: this is the outdir from supermash!
+SRC_DIR=$(abspath ${HOME}/devp/group-crespo/supermash)
 BUILD_DIR=${SRC_DIR}-build
 BUILD_BIN_DIR=${BUILD_DIR}/_bin
-
-# lib environs
-export LD_LIBRARY_PATH=${BUILD_BIN_DIR}
-export PYTHONPATH=${BUILD_BIN_DIR}
 
 .venv:
 	# creating virtual environment
@@ -46,6 +39,13 @@ src/simcore_service_tree.egg-info: .venv
 	@.venv/bin/pip install -r requirements/_test.txt
 	# installing in edit mode
 	@.venv/bin/pip install -e .
+
+
+
+# lib environs for py-smash
+export LD_LIBRARY_PATH=${BUILD_BIN_DIR}
+export PYTHONPATH=${BUILD_BIN_DIR}
+DEFAULT_PORT  ?= 8081
 
 up-devel: devenv ## starts server in development mode
 	@.venv/bin/simcore-service-api --port=${DEFAULT_PORT}
