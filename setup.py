@@ -24,7 +24,7 @@ test_requirements = read_reqs(here/"requirements/_test.txt")
 
 setup(
     name="simcore-service-tree",
-    version="0.1.1",
+    version="0.1.2",
     author="Pedro Crespo (pcrespov)",
     description='Prototype service that serves a tree',
     classifiers=[
