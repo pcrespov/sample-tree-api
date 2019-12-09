@@ -68,8 +68,10 @@ build: docker-compose.yml
 	@export PIP_REQUIREMENTS="$(shell docker run -it --entrypoint python ${DOCKER_IMAGE_NAME} -m pip list --format=json)"; docker-compose -f $< build
 
 
-.PHONY: info-labels
-info-labels:
+.PHONY: info
+info:
+	@echo "APP_NAME    = ${APP_NAME}"
+	@echo "APP_VERSION = ${APP_VERSION}"
 	## docker inspect -f "{{json .Config.Labels }}" ${DOCKER_IMAGE_NAME}
 	docker image inspect ${DOCKER_IMAGE_NAME} | jq .[0].Config.Labels
 
