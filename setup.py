@@ -23,7 +23,7 @@ test_requirements = read_reqs(here/"requirements/_test.txt")
 
 
 setup(
-    name="simcore-service-tree",
+    name="tree-api",
     version="0.1.3",
     author="Pedro Crespo (pcrespov)",
     description='Prototype service that serves a tree',
@@ -54,7 +54,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "simcore-service-api = tree_api.app:main",
+            "tree-api = tree_api.app:main",
         ],
     },
 )

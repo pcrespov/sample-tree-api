@@ -29,21 +29,22 @@ BUILD_BIN_DIR=${BUILD_DIR}/_bin
 	@python3 -m venv .venv
 	@.venv/bin/pip --no-cache install -U pip setuptools wheel
 
-src/simcore_service_tree.egg-info: requirements/_test.txt requirements/_base.txt
-	# installing dependencies
-	@.venv/bin/pip install -r $<
-	# installing in edit mode
-	@.venv/bin/pip install -e .
-
 
 .PHONY: devenv
-devenv: .venv src/simcore_service_tree.egg-info ## builds development environment
+devenv: .venv ## builds development environment
 	# extra tools
 	@.venv/bin/pip --no-cache install \
 		bump2version \
 		pip-tools
 	# installed packages
 	@.venv/bin/pip list
+
+
+.PHONY: install-dev install-prod install-ci
+install-dev install-prod install-ci: ## install app in development/production or CI mode
+	# installing in $(subst install-,,$@) mode
+	@.venv/bin/pip3 install -r requirements/$(subst install-,,$@).txt
+
 
 
 # RUNNING IN DEVEL ENVIRON ---------------
@@ -53,12 +54,11 @@ export LD_LIBRARY_PATH=${BUILD_BIN_DIR}
 export PYTHONPATH=${BUILD_BIN_DIR}
 DEFAULT_PORT  ?= 8081
 
-up-devel: devenv ## starts server in development mode
-	@.venv/bin/simcore-service-api --port=${DEFAULT_PORT}
-
+up-devel: ## starts server in development mode
+	@.venv/bin/$(APP_NAME) --port=${DEFAULT_PORT}
 
 .PHONY: tests
-tests: devenv ## run unit tests
+tests: ## run unit tests
 	@.venv/bin/pytest -vv -x -s --pdb tests/test_data_nodes.py
 
 
@@ -73,11 +73,29 @@ build: docker-compose.yml
 	@export PIP_REQUIREMENTS="$(shell docker run -it --entrypoint python ${DOCKER_IMAGE_NAME} -m pip list --format=json)"; docker-compose -f $< build
 
 
+.PHONY: version-patch version-minor version-major
+
+define bumpversion
+	# upgrades as $(subst version-,,$@) version, commits and tags
+	@bump2version --verbose --list $(subst version-,,$@)
+	@git log -1 --pretty
+endef
+
+version-patch: ## bug fixes not affecting the API/minor/major version
+	$(bumpversion)
+version-minor: ## backwards-compatible API addition or changes
+	$(bumpversion)
+version-major: ## backwards-INcompatible API changes
+	$(bumpversion)
+
+
+
+
 .PHONY: info
 info: ## info
 	@echo "APP_NAME    = ${APP_NAME}"
 	@echo "APP_VERSION = ${APP_VERSION}"
-	docker image inspect ${DOCKER_IMAGE_NAME} | jq .[0].Config.Labels
+	@docker image inspect ${DOCKER_IMAGE_NAME} | jq .[0].Config.Labels
 
 ## docker inspect -f "{{json .Config.Labels }}" ${DOCKER_IMAGE_NAME}
 
@@ -94,20 +112,4 @@ clean: .check-clean ## cleans unversioned and ignored files
 
 .PHONY: help
 help: ## this colorful help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-
-# VERSIONING -----
-
-.PHONY: patch major minor
-patch: ## bug fixes not affecting the API
-	bump2version --verbose --list patch
-	@git log -1 --pretty
-
-minor: ## backwards-compatible API addition or changes
-	bump2version --verbose --list minor
-	@git log -1 --pretty
-
-major: ## backwards-INcompatible API changes
-	bump2version --verbose --list major
-	@git log -1 --pretty
+	@awk --posix 'BEGIN {FS = ":.*?## "} /^[[:alpha:][:space:]_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
