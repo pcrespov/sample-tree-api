@@ -24,7 +24,7 @@ test_requirements = read_reqs(here/"requirements/_test.txt")
 
 setup(
     name="tree-api",
-    version="0.1.3",
+    version="0.1.4",
     author="Pedro Crespo (pcrespov)",
     description='Prototype service that serves a tree',
     classifiers=[
