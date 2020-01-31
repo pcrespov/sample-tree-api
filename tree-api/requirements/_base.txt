@@ -1,4 +1,4 @@
--e ./site-packages/py-smash/
+-e ../site-packages/py-smash/
 
 aiohttp
 aiohttp-swagger   # Swagger API Documentation builder for aiohttp server.
