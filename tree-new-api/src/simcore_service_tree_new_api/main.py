@@ -1,3 +1,6 @@
+""" main app
+
+"""
 import uvicorn
 from fastapi import FastAPI
 
@@ -5,10 +8,12 @@ from .routers import nodes
 
 app = FastAPI(
     title="Tree API",
-    description="Some fast tree API sample",
+    description="An example of RESTful API with a tree abstraction",
     version="0.1.4"
 )
 
+# app.include_router(nodes.router, prefix="/trees", tags=['trees'])
+# app.include_router(nodes.router, prefix="/trees/{tree_id}/nodes", tags=['nodes'])
 app.include_router(nodes.router, prefix="/nodes", tags=['nodes'])
 
 
