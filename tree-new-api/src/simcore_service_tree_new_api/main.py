@@ -5,11 +5,12 @@ import uvicorn
 from fastapi import FastAPI
 
 from . import nodes_routes
+from .__version__ import __version__
 
 app = FastAPI(
     title="Tree API",
     description="An example of RESTful API with a tree abstraction",
-    version="0.1.4"
+    version=__version__
 )
 
 # app.include_router(nodes.router, prefix="/trees", tags=['trees'])
