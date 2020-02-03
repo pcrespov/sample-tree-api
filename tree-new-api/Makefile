@@ -11,6 +11,7 @@ export APP_NAME     := $(notdir $(CURDIR))
 export APP_VERSION   = $(shell cat VERSION)
 APP_CLI_NAME := simcore-service-tree-new-api
 
+ROOT_DIR := $(abspath $(CURDIR)/..)
 
 # TODO: this is the outdir from supermash!
 SRC_DIR=$(abspath ${HOME}/devp/group-crespo/supermash)
@@ -19,20 +20,9 @@ BUILD_BIN_DIR=${BUILD_DIR}/_bin
 
 # INSTALLING  ---------------
 
-.venv:
-	# creating virtual environment
-	@python3 -m venv .venv
-	@.venv/bin/pip --no-cache install -U pip setuptools wheel
-
-
 .PHONY: devenv
-devenv: .venv ## builds development environment
-	# extra tools
-	@.venv/bin/pip --no-cache install \
-		bump2version \
-		pip-tools
-	# installed packages
-	@.venv/bin/pip list
+devenv: ## build development environment
+	$(MAKE) --directory $(ROOT_DIR) $@
 
 .PHONY: requirements
 requirements: ## compiles pip requirements (.in -> .txt)
@@ -40,9 +30,9 @@ requirements: ## compiles pip requirements (.in -> .txt)
 
 
 .PHONY: install-dev install-prod install-ci
-install-dev install-prod install-ci: openapi-specs ## install app in development/production or CI mode
+install-dev install-prod install-ci: ## install app in development/production or CI mode
 	# installing in $(subst install-,,$@) mode
-	@.venv/bin/pip3 install -r requirements/$(subst install-,,$@).txt
+	pip3 install -r requirements/$(subst install-,,$@).txt
 
 
 # RUNNING  ---------------
@@ -53,7 +43,7 @@ export PYTHONPATH=${BUILD_BIN_DIR}
 DEFAULT_PORT  ?= 8081
 
 up-devel: ## starts server in development mode
-	@.venv/bin/uvicorn simcore_service_tree_new_api.main:app --reload
+	uvicorn simcore_service_tree_new_api.main:app --reload
 
 
 

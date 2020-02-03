@@ -9,6 +9,7 @@
 # installs base + tests requirements
 -r _test.txt
 
+-e ../site-packages/py-smash
 
 # installs current package
 -e .

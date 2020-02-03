@@ -10,5 +10,8 @@
 # installs base requirements
 -r _base.txt
 
+../site-packages/py-smash
+
+
 # installs current package
 .
