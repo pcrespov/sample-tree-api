@@ -4,7 +4,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from .routers import nodes
+from . import nodes_routes
 
 app = FastAPI(
     title="Tree API",
@@ -14,7 +14,7 @@ app = FastAPI(
 
 # app.include_router(nodes.router, prefix="/trees", tags=['trees'])
 # app.include_router(nodes.router, prefix="/trees/{tree_id}/nodes", tags=['nodes'])
-app.include_router(nodes.router, prefix="/nodes", tags=['nodes'])
+app.include_router(nodes_routes.router, prefix="/nodes", tags=['nodes'])
 
 
 if __name__ == "__main__":
