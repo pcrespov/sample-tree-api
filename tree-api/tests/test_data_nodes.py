@@ -18,51 +18,53 @@ logging.basicConfig(level=logging.DEBUG)
 
 # FIXTURES ####
 
+
 @pytest.fixture(scope="session")
 def s4l_kernel():
-  with managed_application() as smash_app:
-    yield smash_app
+    with managed_application() as smash_app:
+        yield smash_app
 
 
 @pytest.fixture
 def s4l_modeler(s4l_kernel):
-  model = GetActiveModel()
-  yield model
+    model = GetActiveModel()
+    yield model
 
 
 @pytest.fixture
 def entity(s4l_modeler):
-  e = CreateSolidBlock(Vec3(-1), Vec3(+1), parametrized=True)
-  assert isinstance(e, Entity)
-  yield e
-  e.Delete()
+    e = CreateSolidBlock(Vec3(-1), Vec3(+1), parametrized=True)
+    assert isinstance(e, Entity)
+    yield e
+    e.Delete()
 
 # HELPERS ####
 
-def _get_tree_as_string(tree: Tree) -> str:
-  import sys
-  from io import StringIO
 
-  keep = sys.stdout
-  msg = ""
-  try:
-    sys.stdout = StringIO()
-    tree.show(key=lambda n: n.order)
-    msg = sys.stdout.getvalue().strip()
-  finally:
-    sys.stdout = keep
-  return msg
+def _get_tree_as_string(tree: Tree) -> str:
+    import sys
+    from io import StringIO
+
+    keep = sys.stdout
+    msg = ""
+    try:
+        sys.stdout = StringIO()
+        tree.show(key=lambda n: n.order)
+        msg = sys.stdout.getvalue().strip()
+    finally:
+        sys.stdout = keep
+    return msg
 
 
 # TESTS ####
 
 def test_prop_to_data(entity):
-  # convert Entity.Properties into
-  # entity.Id
+    # convert Entity.Properties into
+    # entity.Id
 
-  data_tree = create_data_tree(entity)
+    data_tree = create_data_tree(entity)
 
-  expected = dedent("""
+    expected = dedent("""
   Block 1
   ├── Name
   ├── Visible
@@ -80,15 +82,14 @@ def test_prop_to_data(entity):
   └── Material
       └── Assign
   """)
-  got = _get_tree_as_string(data_tree)
-  assert  got.strip()== expected.strip()
+    got = _get_tree_as_string(data_tree)
+    assert got.strip() == expected.strip()
 
-  data_schema = tree_to_schema(data_tree)
-  print(json.dumps(data_schema, indent=2))
+    data_schema = tree_to_schema(data_tree)
+    print(json.dumps(data_schema, indent=2))
 
-  data_uischema = tree_to_uischema(data_tree)
-  print(json.dumps(data_uischema, indent=2))
+    data_uischema = tree_to_uischema(data_tree)
+    print(json.dumps(data_uischema, indent=2))
 
-  data_data = tree_to_data(data_tree)
-  print(json.dumps(data_data, indent=2))
-
+    data_data = tree_to_data(data_tree)
+    print(json.dumps(data_data, indent=2))
