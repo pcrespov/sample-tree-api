@@ -4,3 +4,5 @@
 # NOTE: ALL version constraints MUST be commented
 
 fastapi[all]
+
+-c ../site-packages/py-smash
