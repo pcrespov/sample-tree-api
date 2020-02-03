@@ -2,7 +2,7 @@
 from typing import Dict, List, Optional
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from uuid import UUID
 
@@ -14,6 +14,14 @@ class CollectionPage(BaseModel):
     next_page_token: str="" # pagination token to retrieve the next page of results. If the value is "", it means no further results for the request.
 
 
+class HRef(BaseModel):
+    """ url links to related resources
+    """
+    attributes: Optional[str]=None
+    data: Optional[str]=None
+    owner: Optional[str]=None
+    parent: Optional[str]=None
+    self: str
 
 
 # Common properties (read/write)
@@ -28,8 +36,9 @@ class NodeIn(NodeBase):
 
 # Properties answered in API (read-only)
 class Node(NodeBase):
-    children_count: int
-    depth: int
+    children_count: int=Field(0, gt=0)
+    depth: int=Field(0, gt=0)
+    href: HRef
 
 
 class NodesList(CollectionPage):
