@@ -1,0 +1,6 @@
+#
+# Specifies third-party dependencies for 'services/tree-new-api/src'
+#
+# NOTE: ALL version constraints MUST be commented
+
+fastapi[all]
