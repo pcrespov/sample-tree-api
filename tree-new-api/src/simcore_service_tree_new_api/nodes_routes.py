@@ -4,19 +4,22 @@ Standard Methods: https://cloud.google.com/apis/design/standard_methods
 
 """
 
-from typing import Dict, List, Optional
+import uuid as uuidlib
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException
-from fastapi import Path as PathParam
-from fastapi import Query
+from fastapi import APIRouter, Body, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
-from starlette.responses import JSONResponse
 from starlette.status import (HTTP_201_CREATED, HTTP_204_NO_CONTENT,
                               HTTP_409_CONFLICT)
 
-from .nodes_schemas import Node, NodesList
 from . import nodes_crud as crud
+from . import nodes_schemas as schemas
+
+#from fastapi import Path as PathParam
+#from starlette.responses import JSONResponse
+
+
+
 
 
 router = APIRouter()
@@ -26,7 +29,7 @@ router = APIRouter()
 #   https://cloud.google.com/apis/design/standard_methods#list
 
 @router.get("",
-    response_model=NodesList
+    response_model=schemas.NodesList
     )
 async def list_nodes(
     page_token: Optional[str] = Query(None, description="Requests a specific page of the list results"),
@@ -65,14 +68,16 @@ async def search_nodes():
 
 
 
+
 # GET --------------
 #  https://cloud.google.com/apis/design/standard_methods#get
 
 @router.get("/{node_id}",
-    response_model=Node
+    response_model=schemas.Node
     )
 async def get_node(node_id: int):
-    return Node(f"node {node_id} in collection")
+    return schemas.Node(f"node {node_id} in collection")
+
 
 
 
@@ -80,38 +85,32 @@ async def get_node(node_id: int):
 #  https://cloud.google.com/apis/design/standard_methods#create
 
 @router.post("",
-    response_model=Node,
+    response_model=schemas.Node,
     status_code=HTTP_201_CREATED,
     response_description="Successfully created"
     )
-async def create_node():
+async def create_node(node: schemas.NodeIn=Body(None)):
     # ...
-    return Node("new node")
-
-
-@router.post("/{node_id}",
-    response_model=Node,
-    status_code=HTTP_201_CREATED,
-    response_description="Successfully created"
-    )
-async def create_node_with_id(node_id: int):
-    # ...
-    if node_id==0:
+    if node.id:
         # client-assigned resouce name
-        raise HTTPException(status_code=HTTP_409_CONFLICT, detail=f"Node {node_id} already exists")
-    return Node(f"new node with id {node_id}")
+        raise HTTPException(status_code=HTTP_409_CONFLICT, detail=f"Node {node.id} already exists")
+
+    node = schemas.Node(uuidlib.uuid4(), "new")
+    crud.set_node(node.id, node)
+    return node
 
 
 
 
-# UPDATE https://cloud.google.com/apis/design/standard_methods#update
+# UPDATE  --------------
+# https://cloud.google.com/apis/design/standard_methods#update
 @router.patch("/{node_id}",
-    response_model=Node
+    response_model=schemas.Node
     )
-async def udpate_node(node_id: int, *, node: Node):
+async def udpate_node(node_id: int, *, node: schemas.NodeIn):
     # load
     stored_data = crud.get_node(node_id)
-    stored_obj = Node(**stored_data)
+    stored_obj = schemas.Node(**stored_data)
 
     # update
     update_data = node.dict(exclude_unset=True)
@@ -123,9 +122,15 @@ async def udpate_node(node_id: int, *, node: Node):
     return node
 
 
+# DELETE  --------------
+# https://cloud.google.com/apis/design/standard_methods#delete
 @router.delete("/{node_id}",
     status_code=HTTP_204_NO_CONTENT,
     response_description="Successfully deleted"
     )
 async def delete_node(node_id: int):
     print(f"Node {node_id} deleted")
+
+    #If the Delete method immediately removes the resource, it should return an empty response.
+    #If the Delete method initiates a long-running operation, it should return the long-running operation.
+    #If the Delete method only marks the resource as being deleted, it should return the updated resource.

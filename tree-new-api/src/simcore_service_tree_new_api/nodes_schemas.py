@@ -14,26 +14,24 @@ class CollectionPage(BaseModel):
     next_page_token: str="" # pagination token to retrieve the next page of results. If the value is "", it means no further results for the request.
 
 
-# shared props
+
+
+# Common properties (read/write)
 class NodeBase(BaseModel):
-    identifier: Optional[UUID]=None
-    name: Optional[str] = None
+    id: UUID
+    tag: str
+
+# Properties received to API (read/write)
+class NodeIn(NodeBase):
+    id: Optional[UUID]=None
 
 
-# Properties to receive upon creation
-class NodeCreate(NodeBase):
-    name: str
+# Properties answered in API (read-only)
+class Node(NodeBase):
+    children_count: int
+    depth: int
 
 
-# properties to receive on item update
-class Node(NodeCreate):
-    pass
-
-
-# Properties to receive upon creation
-
-
-# Properties to return to client
 class NodesList(CollectionPage):
     nodes: List[Node] = []
 
